@@ -32,6 +32,12 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <Link
+                  to="/dashboard"
+                  className="text-gray-700 hover:text-blue-600 font-semibold"
+                >
+                  Dashboard
+                </Link>
+                <Link
                   to="/courses"
                   className="text-gray-700 hover:text-blue-600 font-semibold"
                 >
@@ -96,6 +102,13 @@ const Navbar = () => {
 
             {isAuthenticated ? (
               <>
+                <Link
+                  to="/dashboard"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
                 <Link
                   to="/courses"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"

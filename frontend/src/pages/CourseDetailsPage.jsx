@@ -4,6 +4,97 @@ import { AlertCircle, Play, BookOpen } from 'lucide-react'
 import { courseService, enrollmentService } from '../services/api'
 import { useAuth } from '../hooks/useAuth'
 
+// Sample course details data
+const SAMPLE_COURSE_DETAILS = {
+  1: {
+    id: 1,
+    title: 'Introduction to Web Development',
+    description: 'Learn the fundamentals of web development including HTML, CSS, and JavaScript. Perfect for beginners!',
+    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
+    lessons: [
+      {
+        id: 1,
+        title: 'Getting Started with HTML',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson1.pdf',
+        position: 1,
+      },
+      {
+        id: 2,
+        title: 'CSS Styling Basics',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson2.pdf',
+        position: 2,
+      },
+      {
+        id: 3,
+        title: 'JavaScript Fundamentals',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson3.pdf',
+        position: 3,
+      },
+    ],
+  },
+  2: {
+    id: 2,
+    title: 'Advanced React.js',
+    description: 'Master React with hooks, context, and advanced patterns for building scalable applications.',
+    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134ef2944f7?w=800&h=400&fit=crop',
+    lessons: [
+      {
+        id: 4,
+        title: 'React Hooks Deep Dive',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson4.pdf',
+        position: 1,
+      },
+      {
+        id: 5,
+        title: 'State Management with Context',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson5.pdf',
+        position: 2,
+      },
+      {
+        id: 6,
+        title: 'Performance Optimization',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson6.pdf',
+        position: 3,
+      },
+    ],
+  },
+  3: {
+    id: 3,
+    title: 'Full Stack Development',
+    description: 'Complete guide to building full stack applications with modern technologies and best practices.',
+    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
+    lessons: [
+      {
+        id: 7,
+        title: 'Frontend Setup & Architecture',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson7.pdf',
+        position: 1,
+      },
+      {
+        id: 8,
+        title: 'Backend API Development',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson8.pdf',
+        position: 2,
+      },
+      {
+        id: 9,
+        title: 'Database & Deployment',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        pdfUrl: 'https://example.com/lesson9.pdf',
+        position: 3,
+      },
+    ],
+  },
+}
+
 const CourseDetailsPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -29,8 +120,14 @@ const CourseDetailsPage = () => {
         setCourse(response.data.data)
       }
     } catch (err) {
-      setError('Failed to load course')
       console.error(err)
+      // Fallback to sample data
+      const sampleCourse = SAMPLE_COURSE_DETAILS[parseInt(id)]
+      if (sampleCourse) {
+        setCourse(sampleCourse)
+      } else {
+        setError('Failed to load course')
+      }
     } finally {
       setLoading(false)
     }

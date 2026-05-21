@@ -82,7 +82,7 @@ desOline/
 ### 1. Clone the Repository
 
 ```bash
-cd /Users/dave/Documents/desOline
+cd desOline
 ```
 
 ### 2. Backend Setup

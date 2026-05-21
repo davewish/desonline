@@ -25,7 +25,7 @@ docker-compose --version
 
 ```bash
 # Navigate to project root
-cd /Users/dave/Documents/desOline
+cd desOline
 
 # Start PostgreSQL and Backend API in Docker
 docker-compose up -d
@@ -55,7 +55,7 @@ curl http://localhost:5000/health
 ### Step 3: Frontend Development (in a NEW terminal)
 
 ```bash
-cd /Users/dave/Documents/desOline/frontend
+cd frontend
 npm install    # First time only
 npm run dev
 ```

@@ -3,6 +3,78 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Download, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 import { courseService, lessonService } from '../services/api'
 
+// Sample course data with lessons
+const SAMPLE_COURSES_DATA = {
+  1: {
+    id: 1,
+    title: 'Introduction to Web Development',
+    description: 'Learn the fundamentals of web development including HTML, CSS, and JavaScript. Perfect for beginners!',
+    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 101, title: 'HTML Basics', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 102, title: 'CSS Styling', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 103, title: 'JavaScript Intro', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+    ],
+  },
+  2: {
+    id: 2,
+    title: 'Advanced React.js',
+    description: 'Master React with hooks, context, and advanced patterns for building scalable applications.',
+    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134ef2944f7?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 201, title: 'React Hooks', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 202, title: 'Context API', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 203, title: 'State Management', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+    ],
+  },
+  3: {
+    id: 3,
+    title: 'Full Stack Development',
+    description: 'Complete guide to building full stack applications with modern technologies and best practices.',
+    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 301, title: 'Frontend Setup', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 302, title: 'Backend Setup', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 303, title: 'Database Integration', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+    ],
+  },
+  4: {
+    id: 4,
+    title: 'JavaScript Fundamentals',
+    description: 'Master the basics of JavaScript programming from variables to advanced concepts.',
+    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f70e504cb?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 401, title: 'Variables & Types', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 402, title: 'Functions', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 403, title: 'Async/Await', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+      { id: 404, title: 'ES6+ Features', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson4.pdf', position: 4 },
+    ],
+  },
+  5: {
+    id: 5,
+    title: 'CSS & Responsive Design',
+    description: 'Learn modern CSS techniques and create beautiful responsive designs that work on all devices.',
+    thumbnail: 'https://images.unsplash.com/photo-1507238691526-01ec042607b2?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 501, title: 'CSS Fundamentals', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 502, title: 'Flexbox & Grid', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 503, title: 'Responsive Design', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+    ],
+  },
+  6: {
+    id: 6,
+    title: 'Node.js Backend Development',
+    description: 'Build powerful backend applications using Node.js, Express, and databases.',
+    thumbnail: 'https://images.unsplash.com/photo-1558694491-dfc8a3c1ef08?w=400&h=300&fit=crop',
+    lessons: [
+      { id: 601, title: 'Node.js Basics', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson1.pdf', position: 1 },
+      { id: 602, title: 'Express Framework', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson2.pdf', position: 2 },
+      { id: 603, title: 'Database Queries', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson3.pdf', position: 3 },
+      { id: 604, title: 'API Development', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', pdfUrl: 'https://example.com/lesson4.pdf', position: 4 },
+    ],
+  },
+}
+
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams()
   const navigate = useNavigate()
@@ -17,21 +89,35 @@ const LessonViewerPage = () => {
   }, [lessonId, courseId])
 
   const fetchLessonData = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const lessonResponse = await lessonService.getLessonById(lessonId)
-      const courseResponse = await courseService.getCourseById(courseId)
-
-      if (lessonResponse.data.success && courseResponse.data.success) {
-        setLesson(lessonResponse.data.data)
-        setCourse(courseResponse.data.data)
-        
-        // Find current lesson index
-        const index = courseResponse.data.data.lessons.findIndex(
-          (l) => l.id === parseInt(lessonId)
-        )
-        setCurrentLessonIndex(index)
+      // Get course data from sample data
+      const courseData = SAMPLE_COURSES_DATA[parseInt(courseId)]
+      if (!courseData) {
+        setError('Course not found')
+        setLoading(false)
+        return
       }
+
+      setCourse(courseData)
+
+      // Find the lesson
+      const foundLesson = courseData.lessons.find(
+        (l) => l.id === parseInt(lessonId)
+      )
+      if (!foundLesson) {
+        setError('Lesson not found')
+        setLoading(false)
+        return
+      }
+
+      setLesson(foundLesson)
+
+      // Find current lesson index
+      const index = courseData.lessons.findIndex(
+        (l) => l.id === parseInt(lessonId)
+      )
+      setCurrentLessonIndex(index)
     } catch (err) {
       setError('Failed to load lesson')
       console.error(err)
@@ -112,14 +198,27 @@ const LessonViewerPage = () => {
             {/* Video Player */}
             {lesson.videoUrl && (
               <div className="bg-black rounded-lg overflow-hidden mb-6 aspect-video">
-                <video
-                  controls
-                  className="w-full h-full"
-                  src={lesson.videoUrl}
-                  preload="metadata"
-                >
-                  Your browser does not support the video tag.
-                </video>
+                {lesson.videoUrl.includes('youtube') || lesson.videoUrl.includes('youtu.be') ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={lesson.videoUrl}
+                    title={lesson.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                ) : (
+                  <video
+                    controls
+                    className="w-full h-full"
+                    src={lesson.videoUrl}
+                    preload="metadata"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
               </div>
             )}
 

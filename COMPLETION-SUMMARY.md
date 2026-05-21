@@ -211,7 +211,7 @@ desOline/
 
 1. **Install dependencies**
    ```bash
-   cd /Users/dave/Documents/desOline/backend
+   cd desOline/backend
    npm install
    
    cd ../frontend

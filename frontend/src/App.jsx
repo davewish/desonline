@@ -13,6 +13,7 @@ import CoursesPage from './pages/CoursesPage'
 import CourseDetailsPage from './pages/CourseDetailsPage'
 import LessonViewerPage from './pages/LessonViewerPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import UserDashboardPage from './pages/UserDashboardPage'
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboardPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/courses"
             element={

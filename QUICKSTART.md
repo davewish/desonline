@@ -30,7 +30,7 @@ createdb desonline
 ### Step 2: Backend Setup (5 minutes)
 
 ```bash
-cd /Users/dave/Documents/desOline/backend
+cd desOline/backend
 
 # Install dependencies
 npm install
@@ -62,7 +62,7 @@ npm run dev
 **In a new terminal:**
 
 ```bash
-cd /Users/dave/Documents/desOline/frontend
+cd desOline/frontend
 
 # Install dependencies
 npm install
@@ -171,7 +171,7 @@ pg_isready
 ### "npm ERR! code ENOENT, syscall open"
 ```bash
 # Same directory as package.json
-cd /Users/dave/Documents/desOline/backend
+cd desOline/backend
 npm install
 ```
 
