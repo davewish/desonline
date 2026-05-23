@@ -1,17 +1,10 @@
-import React, { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React from 'react'
+import { Link } from 'react-router-dom'
 import { BookOpen, Users, Zap } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate(user?.role === 'ADMIN' ? '/admin' : '/dashboard')
-    }
-  }, [isAuthenticated, user, navigate])
 
   return (
     <div className="min-h-screen bg-white">

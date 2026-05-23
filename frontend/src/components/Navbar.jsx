@@ -14,6 +14,11 @@ const Navbar = () => {
     navigate('/')
   }
 
+  const handleHomeClick = (e) => {
+    e.preventDefault()
+    navigate('/')
+  }
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="container">
@@ -25,9 +30,9 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-gray-700 hover:text-blue-600 font-semibold">
+            <button onClick={handleHomeClick} className="text-gray-700 hover:text-blue-600 font-semibold bg-none border-none cursor-pointer">
               Home
-            </Link>
+            </button>
 
             {isAuthenticated ? (
               <>
@@ -92,13 +97,15 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 border-t space-y-2">
-            <Link
-              to="/"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
-              onClick={() => setMobileMenuOpen(false)}
+            <button
+              onClick={(e) => {
+                handleHomeClick(e)
+                setMobileMenuOpen(false)
+              }}
+              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded bg-none border-none cursor-pointer"
             >
               Home
-            </Link>
+            </button>
 
             {isAuthenticated ? (
               <>
