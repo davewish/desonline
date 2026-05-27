@@ -31,7 +31,10 @@ const CourseDetailsPage = () => {
         setCourse(response.data.data);
       }
     } catch (err) {
-      console.error("[COURSE] Failed to load course:", err.response?.data?.message || err.message);
+      console.error(
+        "[COURSE] Failed to load course:",
+        err.response?.data?.message || err.message,
+      );
       setError("Failed to load course. Please try again later.");
     } finally {
       setLoading(false);
@@ -60,14 +63,22 @@ const CourseDetailsPage = () => {
 
     try {
       setEnrolling(true);
-      console.info("[ENROLLMENT] Enrolling user:", user?.email, "Course:", course?.title);
+      console.info(
+        "[ENROLLMENT] Enrolling user:",
+        user?.email,
+        "Course:",
+        course?.title,
+      );
       const response = await enrollmentService.enrollCourse(parseInt(id));
       if (response.data.success) {
         console.info("[ENROLLMENT] Success - User enrolled in:", course?.title);
         setIsEnrolled(true);
       }
     } catch (err) {
-      console.error("[ENROLLMENT] Failed:", err.response?.data?.message || err.message);
+      console.error(
+        "[ENROLLMENT] Failed:",
+        err.response?.data?.message || err.message,
+      );
     } finally {
       setEnrolling(false);
     }

@@ -27,8 +27,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Log successful mutations (POST, PUT, DELETE)
-    if (["post", "put", "delete"].includes(response.config.method?.toLowerCase())) {
-      console.info(`[API] ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    if (
+      ["post", "put", "delete"].includes(response.config.method?.toLowerCase())
+    ) {
+      console.info(
+        `[API] ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`,
+      );
     }
     return response;
   },
@@ -40,7 +44,10 @@ api.interceptors.response.use(
       error.response?.data,
     );
     // Only redirect to login on 401 if NOT the login endpoint itself
-    if (error.response?.status === 401 && !error.config?.url?.includes("/auth/login")) {
+    if (
+      error.response?.status === 401 &&
+      !error.config?.url?.includes("/auth/login")
+    ) {
       storage.removeItem("token");
       // Don't use window.location.href - let the app handle the navigation
     }

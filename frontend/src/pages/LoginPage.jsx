@@ -34,7 +34,7 @@ const LoginPage = () => {
     try {
       setLoading(true);
       console.info("[LOGIN] Attempting login for:", formData.email);
-      
+
       // Call backend API for authentication
       const response = await authService.login({
         email: formData.email,
@@ -51,7 +51,11 @@ const LoginPage = () => {
         setError("Login failed: " + (response.data.message || "Unknown error"));
       }
     } catch (err) {
-      console.error("[LOGIN] Error:", err.response?.status, err.response?.data?.message || err.message);
+      console.error(
+        "[LOGIN] Error:",
+        err.response?.status,
+        err.response?.data?.message || err.message,
+      );
       setError(err.response?.data?.message || err.message || "Login failed");
     } finally {
       setLoading(false);

@@ -26,7 +26,7 @@ export const storage = {
     if (!storageAvailable) {
       return memoryStore[key] || null;
     }
-    
+
     try {
       return window.localStorage.getItem(key);
     } catch (err) {
@@ -43,7 +43,7 @@ export const storage = {
       memoryStore[key] = value;
       return;
     }
-    
+
     try {
       window.localStorage.setItem(key, value);
     } catch (err) {
@@ -60,7 +60,7 @@ export const storage = {
       delete memoryStore[key];
       return;
     }
-    
+
     try {
       window.localStorage.removeItem(key);
     } catch (err) {

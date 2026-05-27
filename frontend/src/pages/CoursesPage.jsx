@@ -19,7 +19,12 @@ const CoursesPage = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      console.info("[COURSES] Fetching courses - Page:", currentPage, "Search:", search || "none");
+      console.info(
+        "[COURSES] Fetching courses - Page:",
+        currentPage,
+        "Search:",
+        search || "none",
+      );
       const response = await courseService.getCourses({
         search: search || undefined,
         page: currentPage,
@@ -31,7 +36,10 @@ const CoursesPage = () => {
         setPagination(response.data.pagination);
       }
     } catch (err) {
-      console.error("[COURSES] Failed to fetch courses:", err.response?.data?.message || err.message);
+      console.error(
+        "[COURSES] Failed to fetch courses:",
+        err.response?.data?.message || err.message,
+      );
       setError("Failed to load courses. Please try again later.");
     } finally {
       setLoading(false);

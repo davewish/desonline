@@ -56,7 +56,10 @@ const LessonViewerPage = () => {
       const index = lessons.findIndex((l) => l.id === parseInt(lessonId));
       setCurrentLessonIndex(index >= 0 ? index : 0);
     } catch (err) {
-      console.error("[LESSON] Failed to load:", err.response?.data?.message || err.message);
+      console.error(
+        "[LESSON] Failed to load:",
+        err.response?.data?.message || err.message,
+      );
       setError("Failed to load lesson. Please try again later.");
     } finally {
       setLoading(false);
@@ -66,7 +69,10 @@ const LessonViewerPage = () => {
   const handlePreviousLesson = () => {
     if (currentLessonIndex > 0) {
       const previousLesson = allLessons[currentLessonIndex - 1];
-      console.info("[LESSON] Navigating to previous lesson:", previousLesson.title);
+      console.info(
+        "[LESSON] Navigating to previous lesson:",
+        previousLesson.title,
+      );
       navigate(`/course/${courseId}/lesson/${previousLesson.id}`);
     }
   };

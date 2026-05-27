@@ -46,7 +46,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = useCallback((newToken, userData) => {
-    console.info("[AUTH] User logged in:", userData.email, "Role:", userData.role);
+    console.info(
+      "[AUTH] User logged in:",
+      userData.email,
+      "Role:",
+      userData.role,
+    );
     setToken(newToken);
     setUser(userData);
     storage.setItem("token", newToken);

@@ -23,14 +23,25 @@ const UserDashboardPage = () => {
       // Fetch user enrollments
       const enrollmentRes = await enrollmentService.getUserEnrollments();
       setEnrollments(enrollmentRes.data.data || []);
-      console.info("[USER-DASHBOARD] Loaded", enrollmentRes.data.data?.length || 0, "enrollments");
+      console.info(
+        "[USER-DASHBOARD] Loaded",
+        enrollmentRes.data.data?.length || 0,
+        "enrollments",
+      );
 
       // Fetch all courses
       const coursesRes = await courseService.getCourses({ limit: 100 });
       setAllCourses(coursesRes.data.data || []);
-      console.info("[USER-DASHBOARD] Loaded", coursesRes.data.data?.length || 0, "courses");
+      console.info(
+        "[USER-DASHBOARD] Loaded",
+        coursesRes.data.data?.length || 0,
+        "courses",
+      );
     } catch (error) {
-      console.error("[USER-DASHBOARD] Failed to fetch data:", error.response?.data?.message || error.message);
+      console.error(
+        "[USER-DASHBOARD] Failed to fetch data:",
+        error.response?.data?.message || error.message,
+      );
     }
     setLoading(false);
   };
@@ -52,7 +63,10 @@ const UserDashboardPage = () => {
       console.info("[USER-DASHBOARD] Enrollment successful");
       fetchUserData();
     } catch (error) {
-      console.error("[USER-DASHBOARD] Failed to enroll:", error.response?.data?.message || error.message);
+      console.error(
+        "[USER-DASHBOARD] Failed to enroll:",
+        error.response?.data?.message || error.message,
+      );
     }
   };
 

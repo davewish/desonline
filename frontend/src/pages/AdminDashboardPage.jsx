@@ -58,8 +58,15 @@ const AdminDashboardPage = () => {
 
     try {
       const lessonsResponse = await lessonService.getAdminLessons();
-      if (lessonsResponse.data.success && Array.isArray(lessonsResponse.data.data)) {
-        console.info("[ADMIN] Loaded", lessonsResponse.data.data.length, "lessons");
+      if (
+        lessonsResponse.data.success &&
+        Array.isArray(lessonsResponse.data.data)
+      ) {
+        console.info(
+          "[ADMIN] Loaded",
+          lessonsResponse.data.data.length,
+          "lessons",
+        );
         setAdminLessons(lessonsResponse.data.data);
       } else {
         setAdminLessons([]);
@@ -110,7 +117,10 @@ const AdminDashboardPage = () => {
       setShowCourseForm(false);
       fetchAdminCourses();
     } catch (err) {
-      console.error("[ADMIN] Failed to create course:", err.response?.data?.message);
+      console.error(
+        "[ADMIN] Failed to create course:",
+        err.response?.data?.message,
+      );
       setError(err.response?.data?.message || "Failed to create course");
     } finally {
       setLoading(false);
@@ -129,7 +139,12 @@ const AdminDashboardPage = () => {
 
     try {
       setLoading(true);
-      console.info("[ADMIN] Creating lesson:", lessonData.title, "for course:", lessonData.courseId);
+      console.info(
+        "[ADMIN] Creating lesson:",
+        lessonData.title,
+        "for course:",
+        lessonData.courseId,
+      );
       await lessonService.createLesson(lessonData);
       console.info("[ADMIN] Lesson created successfully:", lessonData.title);
       setSuccess("Lesson created successfully!");
@@ -143,7 +158,10 @@ const AdminDashboardPage = () => {
       setShowLessonForm(false);
       fetchAdminCourses();
     } catch (err) {
-      console.error("[ADMIN] Failed to create lesson:", err.response?.data?.message);
+      console.error(
+        "[ADMIN] Failed to create lesson:",
+        err.response?.data?.message,
+      );
       setError(err.response?.data?.message || "Failed to create lesson");
     } finally {
       setLoading(false);
@@ -334,10 +352,15 @@ const AdminDashboardPage = () => {
                         </p>
                         <div className="flex items-center justify-between text-sm mb-4">
                           <span className="text-gray-500">
-                            {Array.isArray(course.lessons) ? course.lessons.length : 0} lessons
+                            {Array.isArray(course.lessons)
+                              ? course.lessons.length
+                              : 0}{" "}
+                            lessons
                           </span>
                           <span className="text-gray-500">
-                            {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}
+                            {course.createdAt
+                              ? new Date(course.createdAt).toLocaleDateString()
+                              : "N/A"}
                           </span>
                         </div>
                         <div className="flex gap-2">
@@ -482,107 +505,108 @@ const AdminDashboardPage = () => {
               </h3>
               {Array.isArray(adminLessons) && adminLessons.length > 0 ? (
                 <div className="space-y-8">
-                  {Array.isArray(adminCourses) && adminCourses.map((course) => {
-                    const courseLessons = adminLessons.filter(
-                      (lesson) => lesson.courseId === course.id
-                    );
+                  {Array.isArray(adminCourses) &&
+                    adminCourses.map((course) => {
+                      const courseLessons = adminLessons.filter(
+                        (lesson) => lesson.courseId === course.id,
+                      );
 
-                    if (courseLessons.length === 0) return null;
+                      if (courseLessons.length === 0) return null;
 
-                    return (
-                      <div
-                        key={course.id}
-                        className="bg-white rounded-lg shadow overflow-hidden"
-                      >
-                        {/* Course Header */}
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              {course.thumbnail && (
-                                <img
-                                  src={course.thumbnail}
-                                  alt={course.title}
-                                  className="w-16 h-16 object-cover rounded"
-                                />
-                              )}
-                              <div>
-                                <h3 className="font-bold text-white text-lg">
-                                  {course.title}
-                                </h3>
-                                <p className="text-blue-100 text-sm">
-                                  {courseLessons.length} lesson
-                                  {courseLessons.length !== 1 ? "s" : ""}
-                                </p>
+                      return (
+                        <div
+                          key={course.id}
+                          className="bg-white rounded-lg shadow overflow-hidden"
+                        >
+                          {/* Course Header */}
+                          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                {course.thumbnail && (
+                                  <img
+                                    src={course.thumbnail}
+                                    alt={course.title}
+                                    className="w-16 h-16 object-cover rounded"
+                                  />
+                                )}
+                                <div>
+                                  <h3 className="font-bold text-white text-lg">
+                                    {course.title}
+                                  </h3>
+                                  <p className="text-blue-100 text-sm">
+                                    {courseLessons.length} lesson
+                                    {courseLessons.length !== 1 ? "s" : ""}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Lessons List */}
-                        <div className="divide-y">
-                          {courseLessons
-                            .sort((a, b) => a.position - b.position)
-                            .map((lesson) => (
-                              <div
-                                key={lesson.id}
-                                className="p-4 hover:bg-gray-50 transition-colors"
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3">
-                                      <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-semibold text-sm">
-                                        {lesson.position}
-                                      </span>
-                                      <h4 className="font-semibold text-gray-900">
-                                        {lesson.title}
-                                      </h4>
+                          {/* Lessons List */}
+                          <div className="divide-y">
+                            {courseLessons
+                              .sort((a, b) => a.position - b.position)
+                              .map((lesson) => (
+                                <div
+                                  key={lesson.id}
+                                  className="p-4 hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-semibold text-sm">
+                                          {lesson.position}
+                                        </span>
+                                        <h4 className="font-semibold text-gray-900">
+                                          {lesson.title}
+                                        </h4>
+                                      </div>
+                                      <div className="flex gap-3 mt-3 ml-11">
+                                        {lesson.videoUrl && (
+                                          <button
+                                            onClick={() =>
+                                              handleViewVideo(
+                                                lesson.videoUrl,
+                                                lesson.title,
+                                              )
+                                            }
+                                            className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors flex items-center gap-1"
+                                          >
+                                            <Play className="w-3 h-3" />
+                                            Play
+                                          </button>
+                                        )}
+                                        {lesson.pdfUrl && (
+                                          <button
+                                            onClick={() =>
+                                              handleDownloadPdf(
+                                                lesson.pdfUrl,
+                                                lesson.title,
+                                              )
+                                            }
+                                            className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
+                                          >
+                                            <Download className="w-3 h-3" />
+                                            Download
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div className="flex gap-3 mt-3 ml-11">
-                                      {lesson.videoUrl && (
-                                        <button
-                                          onClick={() =>
-                                            handleViewVideo(
-                                              lesson.videoUrl,
-                                              lesson.title,
-                                            )
-                                          }
-                                          className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors flex items-center gap-1"
-                                        >
-                                          <Play className="w-3 h-3" />
-                                          Play
-                                        </button>
-                                      )}
-                                      {lesson.pdfUrl && (
-                                        <button
-                                          onClick={() =>
-                                            handleDownloadPdf(
-                                              lesson.pdfUrl,
-                                              lesson.title,
-                                            )
-                                          }
-                                          className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
-                                        >
-                                          <Download className="w-3 h-3" />
-                                          Download
-                                        </button>
-                                      )}
+                                    <div className="flex gap-2 ml-4">
+                                      <button className="btn-secondary p-2 hover:bg-gray-200">
+                                        <Edit2 className="w-4 h-4" />
+                                      </button>
+                                      <button className="bg-red-100 text-red-600 hover:bg-red-200 p-2 rounded">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
                                     </div>
-                                  </div>
-                                  <div className="flex gap-2 ml-4">
-                                    <button className="btn-secondary p-2 hover:bg-gray-200">
-                                      <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button className="bg-red-100 text-red-600 hover:bg-red-200 p-2 rounded">
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               ) : (
                 <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
