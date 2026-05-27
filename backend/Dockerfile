@@ -1,10 +1,10 @@
 # Development Dockerfile with hot-reload support
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install required system dependencies for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -13,23 +13,22 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy Prisma schema
-COPY ./src/prisma ./src/prisma
+COPY ./prisma ./prisma
 
 # Generate Prisma client
 RUN npm run prisma:generate
 
 # Copy application code
 COPY ./src ./src
-COPY ./.env.docker ./.env
+
+# Copy environment file
+COPY .env.docker ./.env
 
 # Create uploads directory
 RUN mkdir -p uploads/videos uploads/pdfs uploads/thumbnails
 
 # Expose port
 EXPOSE 5000
-
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["/sbin/dumb-init", "--"]
 
 # Run with npm dev (which uses node --watch for hot reload)
 CMD ["npm", "run", "dev"]

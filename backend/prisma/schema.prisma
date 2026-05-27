@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String
+  password      String
+  role          String    @default("USER") // USER or ADMIN
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  courses       Course[]
+  enrollments   Enrollment[]
+
+  @@map("users")
+}
+
+// Course model
+model Course {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String
+  thumbnail     String?
+  creatorId     Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  creator       User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  lessons       Lesson[]
+  enrollments   Enrollment[]
+
+  @@map("courses")
+}
+
+// Lesson model
+model Lesson {
+  id            Int       @id @default(autoincrement())
+  title         String
+  courseId      Int
+  position      Int       @default(0)
+  videoUrl      String?
+  pdfUrl        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+// Enrollment model
+model Enrollment {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  courseId      Int
+  progress      Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Unique constraint
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}

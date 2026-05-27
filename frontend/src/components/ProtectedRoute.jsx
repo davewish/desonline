@@ -1,19 +1,35 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 /**
  * Protected Route component
  * Only allows authenticated users to access the route
  */
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, token } = useAuth()
+  const { isAuthenticated, token, loading } = useAuth();
 
-  if (!isAuthenticated || !token) {
-    return <Navigate to="/login" replace />
+  console.log("🔒 ProtectedRoute check:", {
+    isAuthenticated,
+    hasToken: !!token,
+    loading,
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
-  return children
-}
+  if (!isAuthenticated || !token) {
+    console.log("❌ Not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
 
-export default ProtectedRoute
+  console.log("✅ Authenticated, rendering protected content");
+  return children;
+};
+
+export default ProtectedRoute;

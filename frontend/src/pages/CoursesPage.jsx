@@ -1,116 +1,56 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, AlertCircle } from 'lucide-react'
-import { courseService } from '../services/api'
-
-// Sample course data
-const SAMPLE_COURSES = [
-  {
-    id: 1,
-    title: 'Introduction to Web Development',
-    description: 'Learn the fundamentals of web development including HTML, CSS, and JavaScript. Perfect for beginners!',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-    createdAt: '2024-01-15',
-    lessons: [{}, {}, {}],
-    enrollments: [{}, {}, {}],
-  },
-  {
-    id: 2,
-    title: 'Advanced React.js',
-    description: 'Master React with hooks, context, and advanced patterns for building scalable applications.',
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134ef2944f7?w=400&h=300&fit=crop',
-    createdAt: '2024-01-20',
-    lessons: [{}, {}, {}],
-    enrollments: [{}, {}],
-  },
-  {
-    id: 3,
-    title: 'Full Stack Development',
-    description: 'Complete guide to building full stack applications with modern technologies and best practices.',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-    createdAt: '2024-01-25',
-    lessons: [{}, {}, {}],
-    enrollments: [{}, {}, {}, {}],
-  },
-  {
-    id: 4,
-    title: 'JavaScript Fundamentals',
-    description: 'Master the basics of JavaScript programming from variables to advanced concepts.',
-    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f70e504cb?w=400&h=300&fit=crop',
-    createdAt: '2024-02-01',
-    lessons: [{}, {}, {}, {}],
-    enrollments: [{}],
-  },
-  {
-    id: 5,
-    title: 'CSS & Responsive Design',
-    description: 'Learn modern CSS techniques and create beautiful responsive designs that work on all devices.',
-    thumbnail: 'https://images.unsplash.com/photo-1507238691526-01ec042607b2?w=400&h=300&fit=crop',
-    createdAt: '2024-02-05',
-    lessons: [{}, {}, {}],
-    enrollments: [{}, {}],
-  },
-  {
-    id: 6,
-    title: 'Node.js Backend Development',
-    description: 'Build powerful backend applications using Node.js, Express, and databases.',
-    thumbnail: 'https://images.unsplash.com/photo-1558694491-dfc8a3c1ef08?w=400&h=300&fit=crop',
-    createdAt: '2024-02-10',
-    lessons: [{}, {}, {}, {}],
-    enrollments: [{}, {}, {}, {}, {}],
-  },
-]
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, AlertCircle } from "lucide-react";
+import { courseService } from "../services/api";
 
 const CoursesPage = () => {
-  const navigate = useNavigate()
-  const [courses, setCourses] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pagination, setPagination] = useState({})
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({});
 
   useEffect(() => {
-    fetchCourses()
-  }, [search, currentPage])
+    fetchCourses();
+  }, [search, currentPage]);
 
   const fetchCourses = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
+      console.info("[COURSES] Fetching courses - Page:", currentPage, "Search:", search || "none");
       const response = await courseService.getCourses({
         search: search || undefined,
         page: currentPage,
         limit: 12,
-      })
+      });
       if (response.data.success) {
-        setCourses(response.data.data)
-        setPagination(response.data.pagination)
+        console.info("[COURSES] Loaded", response.data.data.length, "courses");
+        setCourses(response.data.data);
+        setPagination(response.data.pagination);
       }
     } catch (err) {
-      console.error(err)
-      // Fallback to sample data
-      const filtered = SAMPLE_COURSES.filter((course) =>
-        !search || course.title.toLowerCase().includes(search.toLowerCase()) ||
-        course.description.toLowerCase().includes(search.toLowerCase())
-      )
-      setCourses(filtered)
-      setPagination({ currentPage, totalPages: 1, total: filtered.length })
+      console.error("[COURSES] Failed to fetch courses:", err.response?.data?.message || err.message);
+      setError("Failed to load courses. Please try again later.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSearch = (e) => {
-    setSearch(e.target.value)
-    setCurrentPage(1)
-  }
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="container py-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Browse Courses</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Browse Courses
+          </h1>
           <p className="text-gray-600 text-lg">
             Discover our collection of courses and start learning today
           </p>
@@ -202,13 +142,13 @@ const CoursesPage = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg ${
                         currentPage === page
-                          ? 'bg-blue-600 text-white'
-                          : 'border hover:bg-gray-100'
+                          ? "bg-blue-600 text-white"
+                          : "border hover:bg-gray-100"
                       }`}
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
                 <button
                   onClick={() =>
@@ -225,7 +165,7 @@ const CoursesPage = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CoursesPage
+export default CoursesPage;

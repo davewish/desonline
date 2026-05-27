@@ -1,23 +1,23 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Menu, X } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
-import { useState } from 'react'
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut, Menu, X } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { useState } from "react";
 
 const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuth()
-  const navigate = useNavigate()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
+    logout();
+    navigate("/");
+  };
 
   const handleHomeClick = (e) => {
-    e.preventDefault()
-    navigate('/')
-  }
+    e.preventDefault();
+    navigate("/");
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -30,7 +30,10 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={handleHomeClick} className="text-gray-700 hover:text-blue-600 font-semibold bg-none border-none cursor-pointer">
+            <button
+              onClick={handleHomeClick}
+              className="text-gray-700 hover:text-blue-600 font-semibold bg-none border-none cursor-pointer"
+            >
               Home
             </button>
 
@@ -49,7 +52,7 @@ const Navbar = () => {
                   Courses
                 </Link>
 
-                {user?.role === 'ADMIN' && (
+                {user?.role === "ADMIN" && (
                   <Link
                     to="/admin"
                     className="text-gray-700 hover:text-blue-600 font-semibold"
@@ -99,8 +102,8 @@ const Navbar = () => {
           <div className="md:hidden pb-4 border-t space-y-2">
             <button
               onClick={(e) => {
-                handleHomeClick(e)
-                setMobileMenuOpen(false)
+                handleHomeClick(e);
+                setMobileMenuOpen(false);
               }}
               className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded bg-none border-none cursor-pointer"
             >
@@ -124,7 +127,7 @@ const Navbar = () => {
                   Courses
                 </Link>
 
-                {user?.role === 'ADMIN' && (
+                {user?.role === "ADMIN" && (
                   <Link
                     to="/admin"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
@@ -136,8 +139,8 @@ const Navbar = () => {
 
                 <button
                   onClick={() => {
-                    handleLogout()
-                    setMobileMenuOpen(false)
+                    handleLogout();
+                    setMobileMenuOpen(false);
                   }}
                   className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded font-semibold"
                 >
@@ -166,7 +169,7 @@ const Navbar = () => {
         )}
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

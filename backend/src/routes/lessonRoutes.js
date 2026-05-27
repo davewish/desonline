@@ -1,5 +1,6 @@
 import express from 'express'
 import {
+  getAllLessons,
   getLessonById,
   createLesson,
   updateLesson,
@@ -9,6 +10,12 @@ import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.j
 import { uploadVideo, uploadPDF } from '../middlewares/uploadMiddleware.js'
 
 const router = express.Router()
+
+/**
+ * GET /api/lessons
+ * Get all lessons (admin only)
+ */
+router.get('/', authMiddleware, adminMiddleware, getAllLessons)
 
 /**
  * GET /api/lessons/:id

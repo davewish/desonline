@@ -1,10 +1,10 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { BookOpen, Users, Zap } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+import React from "react";
+import { Link } from "react-router-dom";
+import { BookOpen, Users, Zap } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const HomePage = () => {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <div className="min-h-screen bg-white">
@@ -29,7 +29,7 @@ const HomePage = () => {
                     >
                       Go to Dashboard
                     </Link>
-                    {user?.role === 'ADMIN' && (
+                    {user?.role === "ADMIN" && (
                       <Link
                         to="/admin"
                         className="btn-secondary px-8 py-4 font-semibold text-lg"
@@ -66,7 +66,9 @@ const HomePage = () => {
       {/* Features Section */}
       <section className="py-20 bg-gray-50">
         <div className="container">
-          <h2 className="text-4xl font-bold text-center mb-16">Why Choose Us?</h2>
+          <h2 className="text-4xl font-bold text-center mb-16">
+            Why Choose Us?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="card p-8">
               <BookOpen className="w-12 h-12 text-blue-600 mb-4" />
@@ -110,10 +112,10 @@ const HomePage = () => {
             Join our community of learners today and transform your future.
           </p>
           <Link
-            to={isAuthenticated ? '/courses' : '/register'}
+            to={isAuthenticated ? "/courses" : "/register"}
             className="btn-primary px-8 py-4 font-semibold text-lg inline-block"
           >
-            {isAuthenticated ? 'Browse Courses' : 'Sign Up Now'}
+            {isAuthenticated ? "Browse Courses" : "Sign Up Now"}
           </Link>
         </div>
       </section>
@@ -195,7 +197,7 @@ const HomePage = () => {
         </div>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default HomePage
+export default HomePage;

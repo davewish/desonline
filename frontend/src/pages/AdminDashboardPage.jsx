@@ -1,133 +1,74 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AlertCircle, Check, Trash2, Edit2, X, Download, Play } from 'lucide-react'
-import { courseService, lessonService } from '../services/api'
-import { useAuth } from '../hooks/useAuth'
-
-// Sample admin data
-const SAMPLE_ADMIN_COURSES = [
-  {
-    id: 1,
-    title: 'Introduction to Web Development',
-    description: 'Learn the fundamentals of web development including HTML, CSS, and JavaScript. Perfect for beginners!',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-    createdAt: '2024-01-15',
-    lessons: 3,
-  },
-  {
-    id: 2,
-    title: 'Advanced React.js',
-    description: 'Master React with hooks, context, and advanced patterns for building scalable applications.',
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134ef2944f7?w=400&h=300&fit=crop',
-    createdAt: '2024-01-20',
-    lessons: 3,
-  },
-  {
-    id: 3,
-    title: 'Full Stack Development',
-    description: 'Complete guide to building full stack applications with modern technologies and best practices.',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-    createdAt: '2024-01-25',
-    lessons: 3,
-  },
-]
-
-const SAMPLE_ADMIN_LESSONS = [
-  {
-    id: 1,
-    courseId: 1,
-    title: 'Getting Started with HTML',
-    position: 1,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    pdfUrl: 'https://example.com/lesson1.pdf',
-  },
-  {
-    id: 2,
-    courseId: 1,
-    title: 'CSS Styling Basics',
-    position: 2,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    pdfUrl: 'https://example.com/lesson2.pdf',
-  },
-  {
-    id: 3,
-    courseId: 1,
-    title: 'JavaScript Fundamentals',
-    position: 3,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    pdfUrl: 'https://example.com/lesson3.pdf',
-  },
-  {
-    id: 4,
-    courseId: 2,
-    title: 'React Hooks Deep Dive',
-    position: 1,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    pdfUrl: 'https://example.com/lesson4.pdf',
-  },
-  {
-    id: 5,
-    courseId: 2,
-    title: 'State Management with Context',
-    position: 2,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    pdfUrl: 'https://example.com/lesson5.pdf',
-  },
-]
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertCircle,
+  Check,
+  Trash2,
+  Edit2,
+  X,
+  Download,
+  Play,
+} from "lucide-react";
+import { courseService, lessonService } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 const AdminDashboardPage = () => {
-  const navigate = useNavigate()
-  const { user, isAdmin } = useAuth()
-  const [activeTab, setActiveTab] = useState('courses')
-  const [showCourseForm, setShowCourseForm] = useState(false)
-  const [showLessonForm, setShowLessonForm] = useState(false)
-  const [adminCourses, setAdminCourses] = useState([])
-  const [adminLessons, setAdminLessons] = useState([])
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState("courses");
+  const [showCourseForm, setShowCourseForm] = useState(false);
+  const [showLessonForm, setShowLessonForm] = useState(false);
+  const [adminCourses, setAdminCourses] = useState([]);
+  const [adminLessons, setAdminLessons] = useState([]);
   const [courseData, setCourseData] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     thumbnail: null,
-  })
+  });
   const [lessonData, setLessonData] = useState({
-    courseId: '',
-    title: '',
+    courseId: "",
+    title: "",
     position: 0,
     video: null,
     pdf: null,
-  })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [selectedVideo, setSelectedVideo] = useState(null)
-  const [selectedPdf, setSelectedPdf] = useState(null)
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [selectedPdf, setSelectedPdf] = useState(null);
 
   useEffect(() => {
-    fetchAdminCourses()
-  }, [])
+    fetchAdminCourses();
+  }, []);
 
   const fetchAdminCourses = async () => {
     try {
-      const response = await courseService.getAdminCourses()
-      if (response.data.success) {
-        setAdminCourses(response.data.data)
+      const response = await courseService.getAdminCourses();
+      if (response.data.success && Array.isArray(response.data.data)) {
+        console.info("[ADMIN] Loaded", response.data.data.length, "courses");
+        setAdminCourses(response.data.data);
+      } else {
+        setAdminCourses([]);
       }
     } catch (err) {
-      console.error(err)
-      // Fallback to sample data
-      setAdminCourses(SAMPLE_ADMIN_COURSES)
+      console.error("Failed to fetch courses:", err);
+      setAdminCourses([]);
     }
-    
+
     try {
-      const lessonsResponse = await lessonService.getAdminLessons()
-      if (lessonsResponse.data.success) {
-        setAdminLessons(lessonsResponse.data.data)
+      const lessonsResponse = await lessonService.getAdminLessons();
+      if (lessonsResponse.data.success && Array.isArray(lessonsResponse.data.data)) {
+        console.info("[ADMIN] Loaded", lessonsResponse.data.data.length, "lessons");
+        setAdminLessons(lessonsResponse.data.data);
+      } else {
+        setAdminLessons([]);
       }
     } catch (err) {
-      console.error(err)
-      // Fallback to sample data
-      setAdminLessons(SAMPLE_ADMIN_LESSONS)
+      console.error("Failed to fetch lessons:", err);
+      setAdminLessons([]);
     }
-  }
+  };
 
   if (!isAdmin) {
     return (
@@ -139,84 +80,92 @@ const AdminDashboardPage = () => {
             You do not have permission to access the admin dashboard.
           </p>
           <button
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate("/courses")}
             className="btn-primary w-full"
           >
             Go to Courses
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   const handleCourseSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (!courseData.title || !courseData.description) {
-      setError('Title and description are required')
-      return
+      setError("Title and description are required");
+      return;
     }
 
     try {
-      setLoading(true)
-      await courseService.createCourse(courseData)
-      setSuccess('Course created successfully!')
-      setCourseData({ title: '', description: '', thumbnail: null })
-      setShowCourseForm(false)
+      setLoading(true);
+      console.info("[ADMIN] Creating course:", courseData.title);
+      await courseService.createCourse(courseData);
+      console.info("[ADMIN] Course created successfully:", courseData.title);
+      setSuccess("Course created successfully!");
+      setCourseData({ title: "", description: "", thumbnail: null });
+      setShowCourseForm(false);
+      fetchAdminCourses();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create course')
+      console.error("[ADMIN] Failed to create course:", err.response?.data?.message);
+      setError(err.response?.data?.message || "Failed to create course");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleLessonSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (!lessonData.courseId || !lessonData.title || !lessonData.video) {
-      setError('Course, title, and video are required')
-      return
+      setError("Course, title, and video are required");
+      return;
     }
 
     try {
-      setLoading(true)
-      await lessonService.createLesson(lessonData)
-      setSuccess('Lesson created successfully!')
+      setLoading(true);
+      console.info("[ADMIN] Creating lesson:", lessonData.title, "for course:", lessonData.courseId);
+      await lessonService.createLesson(lessonData);
+      console.info("[ADMIN] Lesson created successfully:", lessonData.title);
+      setSuccess("Lesson created successfully!");
       setLessonData({
-        courseId: '',
-        title: '',
+        courseId: "",
+        title: "",
         position: 0,
         video: null,
         pdf: null,
-      })
-      setShowLessonForm(false)
+      });
+      setShowLessonForm(false);
+      fetchAdminCourses();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create lesson')
+      console.error("[ADMIN] Failed to create lesson:", err.response?.data?.message);
+      setError(err.response?.data?.message || "Failed to create lesson");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleViewVideo = (videoUrl, title) => {
-    setSelectedVideo({ url: videoUrl, title })
-  }
+    setSelectedVideo({ url: videoUrl, title });
+  };
 
   const handleDownloadPdf = (pdfUrl, title) => {
-    const link = document.createElement('a')
-    link.href = pdfUrl
-    link.download = `${title}.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `${title}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const closeVideoModal = () => {
-    setSelectedVideo(null)
-  }
+    setSelectedVideo(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -232,21 +181,21 @@ const AdminDashboardPage = () => {
       <div className="bg-white border-b">
         <div className="container flex gap-8">
           <button
-            onClick={() => setActiveTab('courses')}
+            onClick={() => setActiveTab("courses")}
             className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === 'courses'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "courses"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             Manage Courses
           </button>
           <button
-            onClick={() => setActiveTab('lessons')}
+            onClick={() => setActiveTab("lessons")}
             className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === 'lessons'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "lessons"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             Manage Lessons
@@ -270,15 +219,17 @@ const AdminDashboardPage = () => {
           </div>
         )}
 
-        {activeTab === 'courses' && (
+        {activeTab === "courses" && (
           <div>
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Manage Courses</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Manage Courses
+              </h2>
               <button
                 onClick={() => setShowCourseForm(!showCourseForm)}
                 className="btn-primary"
               >
-                {showCourseForm ? 'Cancel' : 'Create Course'}
+                {showCourseForm ? "Cancel" : "Create Course"}
               </button>
             </div>
 
@@ -343,7 +294,7 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? 'Creating...' : 'Create Course'}
+                    {loading ? "Creating..." : "Create Course"}
                   </button>
                 </form>
               </div>
@@ -351,15 +302,22 @@ const AdminDashboardPage = () => {
 
             {/* Courses List */}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Your Courses</h3>
-              {adminCourses.length === 0 ? (
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                Your Courses
+              </h3>
+              {!Array.isArray(adminCourses) || adminCourses.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                  <p className="text-gray-600">No courses yet. Create your first course!</p>
+                  <p className="text-gray-600">
+                    No courses yet. Create your first course!
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {adminCourses.map((course) => (
-                    <div key={course.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div
+                      key={course.id}
+                      className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+                    >
                       {course.thumbnail && (
                         <img
                           src={course.thumbnail}
@@ -376,22 +334,18 @@ const AdminDashboardPage = () => {
                         </p>
                         <div className="flex items-center justify-between text-sm mb-4">
                           <span className="text-gray-500">
-                            {course.lessons || 0} lessons
+                            {Array.isArray(course.lessons) ? course.lessons.length : 0} lessons
                           </span>
                           <span className="text-gray-500">
-                            {new Date(course.createdAt).toLocaleDateString()}
+                            {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button
-                            className="flex-1 btn-secondary text-sm py-2 flex items-center justify-center gap-2"
-                          >
+                          <button className="flex-1 btn-secondary text-sm py-2 flex items-center justify-center gap-2">
                             <Edit2 className="w-4 h-4" />
                             Edit
                           </button>
-                          <button
-                            className="flex-1 bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-4 rounded text-sm flex items-center justify-center gap-2"
-                          >
+                          <button className="flex-1 bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-4 rounded text-sm flex items-center justify-center gap-2">
                             <Trash2 className="w-4 h-4" />
                             Delete
                           </button>
@@ -405,15 +359,17 @@ const AdminDashboardPage = () => {
           </div>
         )}
 
-        {activeTab === 'lessons' && (
+        {activeTab === "lessons" && (
           <div>
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Manage Lessons</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Manage Lessons
+              </h2>
               <button
                 onClick={() => setShowLessonForm(!showLessonForm)}
                 className="btn-primary"
               >
-                {showLessonForm ? 'Cancel' : 'Create Lesson'}
+                {showLessonForm ? "Cancel" : "Create Lesson"}
               </button>
             </div>
 
@@ -431,7 +387,10 @@ const AdminDashboardPage = () => {
                       type="number"
                       value={lessonData.courseId}
                       onChange={(e) =>
-                        setLessonData({ ...lessonData, courseId: e.target.value })
+                        setLessonData({
+                          ...lessonData,
+                          courseId: e.target.value,
+                        })
                       }
                       className="input"
                       placeholder="Enter course ID"
@@ -510,7 +469,7 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? 'Creating...' : 'Create Lesson'}
+                    {loading ? "Creating..." : "Create Lesson"}
                   </button>
                 </form>
               </div>
@@ -518,19 +477,17 @@ const AdminDashboardPage = () => {
 
             {/* Lessons List Grouped by Course */}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Your Lessons</h3>
-              {adminLessons.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                  <p className="text-gray-600">No lessons yet. Create your first lesson!</p>
-                </div>
-              ) : (
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                Your Lessons
+              </h3>
+              {Array.isArray(adminLessons) && adminLessons.length > 0 ? (
                 <div className="space-y-8">
-                  {adminCourses.map((course) => {
+                  {Array.isArray(adminCourses) && adminCourses.map((course) => {
                     const courseLessons = adminLessons.filter(
                       (lesson) => lesson.courseId === course.id
-                    )
+                    );
 
-                    if (courseLessons.length === 0) return null
+                    if (courseLessons.length === 0) return null;
 
                     return (
                       <div
@@ -554,7 +511,7 @@ const AdminDashboardPage = () => {
                                 </h3>
                                 <p className="text-blue-100 text-sm">
                                   {courseLessons.length} lesson
-                                  {courseLessons.length !== 1 ? 's' : ''}
+                                  {courseLessons.length !== 1 ? "s" : ""}
                                 </p>
                               </div>
                             </div>
@@ -586,7 +543,7 @@ const AdminDashboardPage = () => {
                                           onClick={() =>
                                             handleViewVideo(
                                               lesson.videoUrl,
-                                              lesson.title
+                                              lesson.title,
                                             )
                                           }
                                           className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors flex items-center gap-1"
@@ -600,7 +557,7 @@ const AdminDashboardPage = () => {
                                           onClick={() =>
                                             handleDownloadPdf(
                                               lesson.pdfUrl,
-                                              lesson.title
+                                              lesson.title,
                                             )
                                           }
                                           className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
@@ -624,8 +581,14 @@ const AdminDashboardPage = () => {
                             ))}
                         </div>
                       </div>
-                    )
+                    );
                   })}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                  <p className="text-gray-600">
+                    No lessons yet. Create your first lesson!
+                  </p>
                 </div>
               )}
             </div>
@@ -652,8 +615,8 @@ const AdminDashboardPage = () => {
 
             {/* Video Player */}
             <div className="p-6 bg-black flex items-center justify-center aspect-video">
-              {selectedVideo.url.includes('youtube') ||
-              selectedVideo.url.includes('youtu.be') ? (
+              {selectedVideo.url.includes("youtube") ||
+              selectedVideo.url.includes("youtu.be") ? (
                 <iframe
                   width="100%"
                   height="100%"
@@ -688,7 +651,7 @@ const AdminDashboardPage = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default AdminDashboardPage
+export default AdminDashboardPage;

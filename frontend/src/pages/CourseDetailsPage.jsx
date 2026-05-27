@@ -1,170 +1,77 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { AlertCircle, Play, BookOpen } from 'lucide-react'
-import { courseService, enrollmentService } from '../services/api'
-import { useAuth } from '../hooks/useAuth'
-
-// Sample course details data
-const SAMPLE_COURSE_DETAILS = {
-  1: {
-    id: 1,
-    title: 'Introduction to Web Development',
-    description: 'Learn the fundamentals of web development including HTML, CSS, and JavaScript. Perfect for beginners!',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
-    lessons: [
-      {
-        id: 1,
-        title: 'Getting Started with HTML',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson1.pdf',
-        position: 1,
-      },
-      {
-        id: 2,
-        title: 'CSS Styling Basics',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson2.pdf',
-        position: 2,
-      },
-      {
-        id: 3,
-        title: 'JavaScript Fundamentals',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson3.pdf',
-        position: 3,
-      },
-    ],
-  },
-  2: {
-    id: 2,
-    title: 'Advanced React.js',
-    description: 'Master React with hooks, context, and advanced patterns for building scalable applications.',
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134ef2944f7?w=800&h=400&fit=crop',
-    lessons: [
-      {
-        id: 4,
-        title: 'React Hooks Deep Dive',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson4.pdf',
-        position: 1,
-      },
-      {
-        id: 5,
-        title: 'State Management with Context',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson5.pdf',
-        position: 2,
-      },
-      {
-        id: 6,
-        title: 'Performance Optimization',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson6.pdf',
-        position: 3,
-      },
-    ],
-  },
-  3: {
-    id: 3,
-    title: 'Full Stack Development',
-    description: 'Complete guide to building full stack applications with modern technologies and best practices.',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
-    lessons: [
-      {
-        id: 7,
-        title: 'Frontend Setup & Architecture',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson7.pdf',
-        position: 1,
-      },
-      {
-        id: 8,
-        title: 'Backend API Development',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson8.pdf',
-        position: 2,
-      },
-      {
-        id: 9,
-        title: 'Database & Deployment',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        pdfUrl: 'https://example.com/lesson9.pdf',
-        position: 3,
-      },
-    ],
-  },
-}
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { AlertCircle, Play, BookOpen } from "lucide-react";
+import { courseService, enrollmentService } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 const CourseDetailsPage = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuth()
-  const [course, setCourse] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [enrolling, setEnrolling] = useState(false)
-  const [isEnrolled, setIsEnrolled] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
-    fetchCourse()
+    fetchCourse();
     if (isAuthenticated) {
-      checkEnrollment()
+      checkEnrollment();
     }
-  }, [id, isAuthenticated])
+  }, [id, isAuthenticated]);
 
   const fetchCourse = async () => {
     try {
-      setLoading(true)
-      const response = await courseService.getCourseById(id)
+      setLoading(true);
+      console.info("[COURSE] Loading course details - ID:", id);
+      const response = await courseService.getCourseById(id);
       if (response.data.success) {
-        setCourse(response.data.data)
+        console.info("[COURSE] Loaded:", response.data.data.title);
+        setCourse(response.data.data);
       }
     } catch (err) {
-      console.error(err)
-      // Fallback to sample data
-      const sampleCourse = SAMPLE_COURSE_DETAILS[parseInt(id)]
-      if (sampleCourse) {
-        setCourse(sampleCourse)
-      } else {
-        setError('Failed to load course')
-      }
+      console.error("[COURSE] Failed to load course:", err.response?.data?.message || err.message);
+      setError("Failed to load course. Please try again later.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const checkEnrollment = async () => {
     try {
-      const response = await enrollmentService.getUserEnrollments()
+      const response = await enrollmentService.getUserEnrollments();
       if (response.data.success) {
         const enrolled = response.data.data.some(
-          (e) => e.courseId === parseInt(id)
-        )
-        setIsEnrolled(enrolled)
+          (e) => e.courseId === parseInt(id),
+        );
+        setIsEnrolled(enrolled);
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
-  }
+  };
 
   const handleEnroll = async () => {
     if (!isAuthenticated) {
-      navigate('/login')
-      return
+      navigate("/login");
+      return;
     }
 
     try {
-      setEnrolling(true)
-      const response = await enrollmentService.enrollCourse(parseInt(id))
+      setEnrolling(true);
+      console.info("[ENROLLMENT] Enrolling user:", user?.email, "Course:", course?.title);
+      const response = await enrollmentService.enrollCourse(parseInt(id));
       if (response.data.success) {
-        setIsEnrolled(true)
+        console.info("[ENROLLMENT] Success - User enrolled in:", course?.title);
+        setIsEnrolled(true);
       }
     } catch (err) {
-      console.error(err)
+      console.error("[ENROLLMENT] Failed:", err.response?.data?.message || err.message);
     } finally {
-      setEnrolling(false)
+      setEnrolling(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -174,7 +81,7 @@ const CourseDetailsPage = () => {
           <p className="text-gray-600">Loading course...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -190,11 +97,11 @@ const CourseDetailsPage = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!course) {
-    return null
+    return null;
   }
 
   return (
@@ -203,7 +110,7 @@ const CourseDetailsPage = () => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
         <div className="container">
           <button
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate("/courses")}
             className="text-blue-100 hover:text-white mb-4 font-semibold"
           >
             ← Back to Courses
@@ -236,15 +143,15 @@ const CourseDetailsPage = () => {
                 disabled={isEnrolled || enrolling}
                 className={`btn font-semibold py-3 px-6 rounded-lg transition-all w-full ${
                   isEnrolled
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-white text-blue-600 hover:bg-gray-100'
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-white text-blue-600 hover:bg-gray-100"
                 }`}
               >
                 {isEnrolled
-                  ? '✓ Enrolled'
+                  ? "✓ Enrolled"
                   : enrolling
-                  ? 'Enrolling...'
-                  : 'Enroll Now'}
+                    ? "Enrolling..."
+                    : "Enroll Now"}
               </button>
             </div>
           </div>
@@ -305,14 +212,14 @@ const CourseDetailsPage = () => {
                     key={lesson.id}
                     onClick={() => {
                       if (isEnrolled) {
-                        navigate(`/course/${id}/lesson/${lesson.id}`)
+                        navigate(`/course/${id}/lesson/${lesson.id}`);
                       }
                     }}
                     disabled={!isEnrolled}
                     className={`w-full text-left p-4 transition-colors flex items-start gap-3 ${
                       isEnrolled
-                        ? 'hover:bg-gray-50 cursor-pointer'
-                        : 'opacity-60 cursor-not-allowed'
+                        ? "hover:bg-gray-50 cursor-pointer"
+                        : "opacity-60 cursor-not-allowed"
                     }`}
                   >
                     <Play className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
@@ -321,7 +228,9 @@ const CourseDetailsPage = () => {
                         Lesson {index + 1}: {lesson.title}
                       </p>
                       {!isEnrolled && (
-                        <p className="text-xs text-gray-500 mt-1">Enroll to view</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enroll to view
+                        </p>
                       )}
                     </div>
                   </button>
@@ -332,7 +241,7 @@ const CourseDetailsPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CourseDetailsPage
+export default CourseDetailsPage;

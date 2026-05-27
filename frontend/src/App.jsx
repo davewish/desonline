@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
@@ -16,6 +16,10 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import UserDashboardPage from './pages/UserDashboardPage'
 
 function App() {
+  useEffect(() => {
+    console.info('[APP] DesOnline - Application started')
+  }, [])
+
   return (
     <AuthProvider>
       <Router>
