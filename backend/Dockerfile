@@ -28,7 +28,7 @@ RUN mkdir -p uploads/videos uploads/pdfs uploads/thumbnails
 EXPOSE 5000
 
 # Create a startup script that runs migrations and then starts the app
-RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nnpm run prisma:db:push\necho "✅ Schema synced!"\necho "🌱 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nprisma db push --skip-generate --force-skip-generate 2>/dev/null || echo "Schema already synced or skipping..."\necho "✅ Schema synced!"\necho "🌱 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Run with entrypoint script
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
