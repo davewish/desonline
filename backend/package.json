@@ -12,6 +12,7 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:db:push": "prisma db push --skip-generate",
     "prisma:studio": "prisma studio",
     "seed": "node src/seed.js"
   },

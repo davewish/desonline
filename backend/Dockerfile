@@ -21,14 +21,14 @@ RUN npm run prisma:generate
 # Copy application code
 COPY ./src ./src
 
-# Copy environment file
-COPY .env.docker ./.env
-
 # Create uploads directory
 RUN mkdir -p uploads/videos uploads/pdfs uploads/thumbnails
 
 # Expose port
 EXPOSE 5000
 
-# Run with npm dev (which uses node --watch for hot reload)
-CMD ["npm", "run", "dev"]
+# Create a startup script that runs migrations and then starts the app
+RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nnpm run prisma:db:push\necho "✅ Schema synced!"\necho "🌱 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+
+# Run with entrypoint script
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
