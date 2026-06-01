@@ -24,11 +24,14 @@ COPY ./src ./src
 # Create uploads directory
 RUN mkdir -p uploads/videos uploads/pdfs uploads/thumbnails
 
+# Copy seed script
+COPY ./src/seed.js ./src/seed.js
+
 # Expose port
 EXPOSE 5000
 
 # Create a startup script that runs migrations and then starts the app
-RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nnpx prisma db push --skip-generate --accept-data-loss\necho "✅ Schema synced!"\necho "🌱 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nnpx prisma db push --skip-generate --accept-data-loss\necho "✅ Schema synced!"\necho "🌱 Seeding database..."\nnode src/seed.js || true\necho "✅ Database ready!"\necho "🚀 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Run with entrypoint script
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
