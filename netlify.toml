@@ -10,6 +10,8 @@
 
 [context.production.environment]
   NODE_ENV = "production"
+  VITE_API_URL = "https://desonline-production.up.railway.app/api"
 
 [context.deploy-preview.environment]
   NODE_ENV = "production"
+  VITE_API_URL = "https://desonline-production.up.railway.app/api"
