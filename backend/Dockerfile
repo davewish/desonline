@@ -1,10 +1,10 @@
 # Development Dockerfile with hot-reload support
-FROM node:18-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Install required system dependencies for Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -13,25 +13,23 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy Prisma schema
-COPY ./prisma ./prisma
+COPY ./src/prisma ./src/prisma
 
 # Generate Prisma client
 RUN npm run prisma:generate
 
 # Copy application code
 COPY ./src ./src
+COPY ./.env.docker ./.env
 
 # Create uploads directory
 RUN mkdir -p uploads/videos uploads/pdfs uploads/thumbnails
 
-# Copy seed script
-COPY ./src/seed.js ./src/seed.js
-
 # Expose port
 EXPOSE 5000
 
-# Create a startup script that runs migrations and then starts the app
-RUN echo '#!/bin/sh\nset -e\necho "🔄 Syncing Prisma schema..."\nnpx prisma db push --skip-generate --accept-data-loss\necho "✅ Schema synced!"\necho "🌱 Seeding database..."\nnode src/seed.js || true\necho "✅ Database ready!"\necho "🚀 Starting dev server..."\nnpm run dev' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["/sbin/dumb-init", "--"]
 
-# Run with entrypoint script
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Run with npm dev (which uses node --watch for hot reload)
+CMD ["npm", "run", "dev"]

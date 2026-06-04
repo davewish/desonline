@@ -1,102 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Download, ChevronLeft, ChevronRight, AlertCircle, BookOpen } from "lucide-react";
-import { courseService, lessonService } from "../services/api";
-import QuizModal from "../components/QuizModal";
-import { getQuizByLessonId } from "../services/mockQuizData";
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Download, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
+import { courseService, lessonService } from '../services/api'
 
 const LessonViewerPage = () => {
-  const { courseId, lessonId } = useParams();
-  const navigate = useNavigate();
-  const [lesson, setLesson] = useState(null);
-  const [course, setCourse] = useState(null);
-  const [allLessons, setAllLessons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [quizScores, setQuizScores] = useState({});
+  const { courseId, lessonId } = useParams()
+  const navigate = useNavigate()
+  const [lesson, setLesson] = useState(null)
+  const [course, setCourse] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
 
   useEffect(() => {
-    fetchLessonData();
-  }, [lessonId, courseId]);
+    fetchLessonData()
+  }, [lessonId, courseId])
 
   const fetchLessonData = async () => {
-    setLoading(true);
     try {
-      console.info("[LESSON] Loading - Course:", courseId, "Lesson:", lessonId);
-      // Get course data from API
-      const courseRes = await courseService.getCourseById(courseId);
-      if (!courseRes.data.success) {
-        console.error("[LESSON] Course not found");
-        setError("Course not found");
-        setLoading(false);
-        return;
+      setLoading(true)
+      const lessonResponse = await lessonService.getLessonById(lessonId)
+      const courseResponse = await courseService.getCourseById(courseId)
+
+      if (lessonResponse.data.success && courseResponse.data.success) {
+        setLesson(lessonResponse.data.data)
+        setCourse(courseResponse.data.data)
+        
+        // Find current lesson index
+        const index = courseResponse.data.data.lessons.findIndex(
+          (l) => l.id === parseInt(lessonId)
+        )
+        setCurrentLessonIndex(index)
       }
-
-      const courseData = courseRes.data.data;
-      setCourse(courseData);
-      console.info("[LESSON] Course loaded:", courseData.title);
-
-      // Get lesson data from API
-      const lessonRes = await lessonService.getLessonById(lessonId);
-      if (!lessonRes.data.success) {
-        console.error("[LESSON] Lesson not found");
-        setError("Lesson not found");
-        setLoading(false);
-        return;
-      }
-
-      const lessonData = lessonRes.data.data;
-      setLesson(lessonData);
-      console.info("[LESSON] Lesson loaded:", lessonData.title);
-
-      // Get all lessons for the course to enable navigation
-      const lessonsRes = await courseService.getCourseById(courseId);
-      const lessons = lessonsRes.data.data.lessons || [];
-      setAllLessons(lessons);
-
-      // Find current lesson index
-      const index = lessons.findIndex((l) => l.id === parseInt(lessonId));
-      setCurrentLessonIndex(index >= 0 ? index : 0);
     } catch (err) {
-      console.error(
-        "[LESSON] Failed to load:",
-        err.response?.data?.message || err.message,
-      );
-      setError("Failed to load lesson. Please try again later.");
+      setError('Failed to load lesson')
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handlePreviousLesson = () => {
     if (currentLessonIndex > 0) {
-      const previousLesson = allLessons[currentLessonIndex - 1];
-      console.info(
-        "[LESSON] Navigating to previous lesson:",
-        previousLesson.title,
-      );
-      navigate(`/course/${courseId}/lesson/${previousLesson.id}`);
+      const previousLesson = course.lessons[currentLessonIndex - 1]
+      navigate(`/course/${courseId}/lesson/${previousLesson.id}`)
     }
-  };
+  }
 
   const handleNextLesson = () => {
-    if (currentLessonIndex < allLessons.length - 1) {
-      const nextLesson = allLessons[currentLessonIndex + 1];
-      console.info("[LESSON] Navigating to next lesson:", nextLesson.title);
-      navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
+    if (currentLessonIndex < course.lessons.length - 1) {
+      const nextLesson = course.lessons[currentLessonIndex + 1]
+      navigate(`/course/${courseId}/lesson/${nextLesson.id}`)
     }
-  };
-
-  const handleQuizSubmit = (result) => {
-    console.info("[LESSON] Quiz submitted:", result);
-    setQuizScores({
-      ...quizScores,
-      [result.quizId]: result,
-    });
-    // TODO: Send quiz result to backend API
-  };
+  }
 
   if (loading) {
     return (
@@ -106,7 +62,7 @@ const LessonViewerPage = () => {
           <p className="text-gray-600">Loading lesson...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -122,11 +78,11 @@ const LessonViewerPage = () => {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (!lesson || !course) {
-    return null;
+    return null
   }
 
   return (
@@ -142,9 +98,7 @@ const LessonViewerPage = () => {
               >
                 ← Back to Course
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {lesson.title}
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
               <p className="text-gray-600 text-sm mt-1">{course.title}</p>
             </div>
           </div>
@@ -158,28 +112,14 @@ const LessonViewerPage = () => {
             {/* Video Player */}
             {lesson.videoUrl && (
               <div className="bg-black rounded-lg overflow-hidden mb-6 aspect-video">
-                {lesson.videoUrl.includes("youtube") ||
-                lesson.videoUrl.includes("youtu.be") ? (
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={lesson.videoUrl}
-                    title={lesson.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
-                ) : (
-                  <video
-                    controls
-                    className="w-full h-full"
-                    src={lesson.videoUrl}
-                    preload="metadata"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                )}
+                <video
+                  controls
+                  className="w-full h-full"
+                  src={lesson.videoUrl}
+                  preload="metadata"
+                >
+                  Your browser does not support the video tag.
+                </video>
               </div>
             )}
 
@@ -207,31 +147,6 @@ const LessonViewerPage = () => {
                   </a>
                 </div>
               )}
-
-              {/* Quiz Button */}
-              {getQuizByLessonId(lessonId) && (
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-1">
-                        <BookOpen className="w-4 h-4" />
-                        Test Your Knowledge
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Take the quiz to reinforce what you learned
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowQuiz(true)}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold whitespace-nowrap"
-                    >
-                      {quizScores[getQuizByLessonId(lessonId)?.id]
-                        ? `Retake Quiz (Score: ${quizScores[getQuizByLessonId(lessonId)?.id].score}%)`
-                        : "Take Quiz"}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -252,8 +167,8 @@ const LessonViewerPage = () => {
                     }
                     className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
                       l.id === lesson.id
-                        ? "bg-blue-50 border-l-4 border-blue-600"
-                        : ""
+                        ? 'bg-blue-50 border-l-4 border-blue-600'
+                        : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -264,8 +179,8 @@ const LessonViewerPage = () => {
                         <p
                           className={`font-medium text-sm ${
                             l.id === lesson.id
-                              ? "text-blue-600"
-                              : "text-gray-900"
+                              ? 'text-blue-600'
+                              : 'text-gray-900'
                           }`}
                         >
                           {l.title}
@@ -299,17 +214,8 @@ const LessonViewerPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Quiz Modal */}
-      {showQuiz && (
-        <QuizModal
-          quiz={getQuizByLessonId(lessonId)}
-          onClose={() => setShowQuiz(false)}
-          onSubmit={handleQuizSubmit}
-        />
-      )}
     </div>
-  );
-};
+  )
+}
 
-export default LessonViewerPage;
+export default LessonViewerPage

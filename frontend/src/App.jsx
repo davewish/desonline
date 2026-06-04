@@ -1,25 +1,20 @@
-import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import Navbar from './components/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 
 // Pages
-import HomePage from "./pages/HomePage";
-import RegisterPage from "./pages/RegisterPage";
-import LoginPage from "./pages/LoginPage";
-import CoursesPage from "./pages/CoursesPage";
-import CourseDetailsPage from "./pages/CourseDetailsPage";
-import LessonViewerPage from "./pages/LessonViewerPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import UserDashboardPage from "./pages/UserDashboardPage";
+import HomePage from './pages/HomePage'
+import RegisterPage from './pages/RegisterPage'
+import LoginPage from './pages/LoginPage'
+import CoursesPage from './pages/CoursesPage'
+import CourseDetailsPage from './pages/CourseDetailsPage'
+import LessonViewerPage from './pages/LessonViewerPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
 
 function App() {
-  useEffect(() => {
-    console.info("[APP] DesOnline - Application started");
-  }, []);
-
   return (
     <AuthProvider>
       <Router>
@@ -31,14 +26,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <UserDashboardPage />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/courses"
             element={
@@ -75,14 +62,11 @@ function App() {
           />
 
           {/* 404 */}
-          <Route
-            path="*"
-            element={<h1 className="text-center mt-20">Not Found</h1>}
-          />
+          <Route path="*" element={<h1 className="text-center mt-20">Not Found</h1>} />
         </Routes>
       </Router>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App

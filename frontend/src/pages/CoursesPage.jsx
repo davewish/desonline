@@ -1,64 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, AlertCircle } from "lucide-react";
-import { courseService } from "../services/api";
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Search, AlertCircle } from 'lucide-react'
+import { courseService } from '../services/api'
 
 const CoursesPage = () => {
-  const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({});
+  const navigate = useNavigate()
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({})
 
   useEffect(() => {
-    fetchCourses();
-  }, [search, currentPage]);
+    fetchCourses()
+  }, [search, currentPage])
 
   const fetchCourses = async () => {
     try {
-      setLoading(true);
-      console.info(
-        "[COURSES] Fetching courses - Page:",
-        currentPage,
-        "Search:",
-        search || "none",
-      );
+      setLoading(true)
       const response = await courseService.getCourses({
         search: search || undefined,
         page: currentPage,
         limit: 12,
-      });
+      })
       if (response.data.success) {
-        console.info("[COURSES] Loaded", response.data.data.length, "courses");
-        setCourses(response.data.data);
-        setPagination(response.data.pagination);
+        setCourses(response.data.data)
+        setPagination(response.data.pagination)
       }
     } catch (err) {
-      console.error(
-        "[COURSES] Failed to fetch courses:",
-        err.response?.data?.message || err.message,
-      );
-      setError("Failed to load courses. Please try again later.");
+      setError('Failed to load courses')
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSearch = (e) => {
-    setSearch(e.target.value);
-    setCurrentPage(1);
-  };
+    setSearch(e.target.value)
+    setCurrentPage(1)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="container py-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Browse Courses
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Browse Courses</h1>
           <p className="text-gray-600 text-lg">
             Discover our collection of courses and start learning today
           </p>
@@ -150,13 +138,13 @@ const CoursesPage = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg ${
                         currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "border hover:bg-gray-100"
+                          ? 'bg-blue-600 text-white'
+                          : 'border hover:bg-gray-100'
                       }`}
                     >
                       {page}
                     </button>
-                  ),
+                  )
                 )}
                 <button
                   onClick={() =>
@@ -173,7 +161,7 @@ const CoursesPage = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CoursesPage;
+export default CoursesPage

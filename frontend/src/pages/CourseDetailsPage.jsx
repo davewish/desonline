@@ -1,101 +1,73 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AlertCircle, Play, BookOpen, Award } from "lucide-react";
-import { courseService, enrollmentService } from "../services/api";
-import { useAuth } from "../hooks/useAuth";
-import ExamModal from "../components/ExamModal";
-import { getExamByCourseId } from "../services/mockQuizData";
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { AlertCircle, Play, BookOpen } from 'lucide-react'
+import { courseService, enrollmentService } from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 const CourseDetailsPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [enrolling, setEnrolling] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [showExam, setShowExam] = useState(false);
-  const [examScores, setExamScores] = useState({});
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
+  const [course, setCourse] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [enrolling, setEnrolling] = useState(false)
+  const [isEnrolled, setIsEnrolled] = useState(false)
 
   useEffect(() => {
-    fetchCourse();
+    fetchCourse()
     if (isAuthenticated) {
-      checkEnrollment();
+      checkEnrollment()
     }
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated])
 
   const fetchCourse = async () => {
     try {
-      setLoading(true);
-      console.info("[COURSE] Loading course details - ID:", id);
-      const response = await courseService.getCourseById(id);
+      setLoading(true)
+      const response = await courseService.getCourseById(id)
       if (response.data.success) {
-        console.info("[COURSE] Loaded:", response.data.data.title);
-        setCourse(response.data.data);
+        setCourse(response.data.data)
       }
     } catch (err) {
-      console.error(
-        "[COURSE] Failed to load course:",
-        err.response?.data?.message || err.message,
-      );
-      setError("Failed to load course. Please try again later.");
+      setError('Failed to load course')
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const checkEnrollment = async () => {
     try {
-      const response = await enrollmentService.getUserEnrollments();
+      const response = await enrollmentService.getUserEnrollments()
       if (response.data.success) {
         const enrolled = response.data.data.some(
-          (e) => e.courseId === parseInt(id),
-        );
-        setIsEnrolled(enrolled);
+          (e) => e.courseId === parseInt(id)
+        )
+        setIsEnrolled(enrolled)
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
     }
-  };
+  }
 
   const handleEnroll = async () => {
     if (!isAuthenticated) {
-      navigate("/login");
-      return;
+      navigate('/login')
+      return
     }
 
     try {
-      setEnrolling(true);
-      console.info(
-        "[ENROLLMENT] Enrolling user:",
-        user?.email,
-        "Course:",
-        course?.title,
-      );
-      const response = await enrollmentService.enrollCourse(parseInt(id));
+      setEnrolling(true)
+      const response = await enrollmentService.enrollCourse(parseInt(id))
       if (response.data.success) {
-        console.info("[ENROLLMENT] Success - User enrolled in:", course?.title);
-        setIsEnrolled(true);
+        setIsEnrolled(true)
       }
     } catch (err) {
-      console.error(
-        "[ENROLLMENT] Failed:",
-        err.response?.data?.message || err.message,
-      );
+      console.error(err)
     } finally {
-      setEnrolling(false);
+      setEnrolling(false)
     }
-  };
-
-  const handleExamSubmit = (result) => {
-    console.info("[EXAM] Exam submitted:", result);
-    setExamScores({
-      ...examScores,
-      [result.examId]: result,
-    });
-    // TODO: Send exam result to backend API
-  };
+  }
 
   if (loading) {
     return (
@@ -105,7 +77,7 @@ const CourseDetailsPage = () => {
           <p className="text-gray-600">Loading course...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -121,11 +93,11 @@ const CourseDetailsPage = () => {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (!course) {
-    return null;
+    return null
   }
 
   return (
@@ -134,7 +106,7 @@ const CourseDetailsPage = () => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
         <div className="container">
           <button
-            onClick={() => navigate("/courses")}
+            onClick={() => navigate('/courses')}
             className="text-blue-100 hover:text-white mb-4 font-semibold"
           >
             ← Back to Courses
@@ -167,15 +139,15 @@ const CourseDetailsPage = () => {
                 disabled={isEnrolled || enrolling}
                 className={`btn font-semibold py-3 px-6 rounded-lg transition-all w-full ${
                   isEnrolled
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-white text-blue-600 hover:bg-gray-100"
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-white text-blue-600 hover:bg-gray-100'
                 }`}
               >
                 {isEnrolled
-                  ? "✓ Enrolled"
+                  ? '✓ Enrolled'
                   : enrolling
-                    ? "Enrolling..."
-                    : "Enroll Now"}
+                  ? 'Enrolling...'
+                  : 'Enroll Now'}
               </button>
             </div>
           </div>
@@ -236,14 +208,14 @@ const CourseDetailsPage = () => {
                     key={lesson.id}
                     onClick={() => {
                       if (isEnrolled) {
-                        navigate(`/course/${id}/lesson/${lesson.id}`);
+                        navigate(`/course/${id}/lesson/${lesson.id}`)
                       }
                     }}
                     disabled={!isEnrolled}
                     className={`w-full text-left p-4 transition-colors flex items-start gap-3 ${
                       isEnrolled
-                        ? "hover:bg-gray-50 cursor-pointer"
-                        : "opacity-60 cursor-not-allowed"
+                        ? 'hover:bg-gray-50 cursor-pointer'
+                        : 'opacity-60 cursor-not-allowed'
                     }`}
                   >
                     <Play className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
@@ -252,9 +224,7 @@ const CourseDetailsPage = () => {
                         Lesson {index + 1}: {lesson.title}
                       </p>
                       {!isEnrolled && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Enroll to view
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Enroll to view</p>
                       )}
                     </div>
                   </button>
@@ -265,7 +235,7 @@ const CourseDetailsPage = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CourseDetailsPage;
+export default CourseDetailsPage
