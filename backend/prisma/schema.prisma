@@ -23,6 +23,8 @@ model User {
   // Relations
   courses       Course[]
   enrollments   Enrollment[]
+  userQuizzes   UserQuiz[]
+  userExams     UserExam[]
 
   @@map("users")
 }
@@ -41,6 +43,7 @@ model Course {
   creator       User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   lessons       Lesson[]
   enrollments   Enrollment[]
+  exams         Exam[]
 
   @@map("courses")
 }
@@ -58,6 +61,7 @@ model Lesson {
 
   // Relations
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quizzes       Quiz[]
 
   @@map("lessons")
 }
@@ -78,4 +82,111 @@ model Enrollment {
   // Unique constraint
   @@unique([userId, courseId])
   @@map("enrollments")
+}
+
+// Quiz model - Lesson-level quizzes
+model Quiz {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  lessonId      Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  lesson        Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions     Question[]
+  userQuizzes   UserQuiz[]
+
+  @@index([lessonId])
+  @@map("quizzes")
+}
+
+// Exam model - Course-level exams
+model Exam {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  courseId      Int
+  passingScore  Int       @default(70)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions     Question[]
+  userExams     UserExam[]
+
+  @@index([courseId])
+  @@map("exams")
+}
+
+// Question model - Questions for quizzes and exams
+model Question {
+  id            Int       @id @default(autoincrement())
+  text          String
+  options       String[]  // Array of answer options (JSONB in PostgreSQL)
+  correctAnswer Int       // Index of correct option (0-based)
+  quizId        Int?
+  examId        Int?
+  position      Int       @default(0) // Question order
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  quiz          Quiz?     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  exam          Exam?     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([examId])
+  @@map("questions")
+}
+
+// UserQuiz model - Tracks user quiz attempts
+model UserQuiz {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  quizId        Int
+  score         Int       // Percentage (0-100)
+  answers       Json      // { "0": 2, "1": 1, ... } (question index: selected answer index)
+  completed     Boolean   @default(true)
+  attempts      Int       @default(1)
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId])
+  @@index([userId])
+  @@index([quizId])
+  @@map("user_quizzes")
+}
+
+// UserExam model - Tracks user exam attempts
+model UserExam {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  examId          Int
+  score           Int       // Percentage (0-100)
+  answers         Json      // { "0": 2, "1": 1, ... } (question index: selected answer index)
+  passed          Boolean   @default(false)
+  attempts        Int       @default(1)
+  certificatePath String?   // Path to generated certificate PDF
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam            Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId])
+  @@index([userId])
+  @@index([examId])
+  @@map("user_exams")
 }

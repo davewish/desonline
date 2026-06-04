@@ -123,4 +123,26 @@ export const enrollmentService = {
   unenrollCourse: (enrollmentId) => api.delete(`/enrollments/${enrollmentId}`),
 };
 
+// Quiz services
+export const quizService = {
+  getQuizById: (id) => api.get(`/quizzes/${id}`),
+  getQuizzesByLesson: (lessonId) => api.get(`/quizzes/lesson/${lessonId}`),
+  createQuiz: (data) => api.post("/quizzes", data),
+  submitQuiz: (quizId, answers) =>
+    api.post(`/quizzes/${quizId}/submit`, { quizId, answers }),
+  getUserQuizHistory: (quizId) => api.get(`/quizzes/${quizId}/history`),
+  deleteQuiz: (id) => api.delete(`/quizzes/${id}`),
+};
+
+// Exam services
+export const examService = {
+  getExamById: (id) => api.get(`/exams/${id}`),
+  getExamByCourse: (courseId) => api.get(`/exams/course/${courseId}`),
+  createExam: (data) => api.post("/exams", data),
+  submitExam: (examId, answers) =>
+    api.post(`/exams/${examId}/submit`, { examId, answers }),
+  getUserExamHistory: (examId) => api.get(`/exams/${examId}/history`),
+  deleteExam: (id) => api.delete(`/exams/${id}`),
+};
+
 export default api;
