@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, ChevronLeft, ChevronRight, AlertCircle, BookOpen } from "lucide-react";
+import {
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  BookOpen,
+} from "lucide-react";
 import { courseService, lessonService, quizService } from "../services/api";
 import QuizModal from "../components/QuizModal";
 
@@ -56,13 +62,15 @@ const LessonViewerPage = () => {
       const lessons = lessonsRes.data.data.lessons || [];
       setAllLessons(lessons);
 
-
       // Fetch quizzes for this lesson
       try {
         const quizzesRes = await quizService.getQuizzesByLesson(lessonId);
         if (quizzesRes.data.success) {
           setQuizzes(quizzesRes.data.data || []);
-          console.info("[LESSON] Quizzes loaded:", quizzesRes.data.data?.length || 0);
+          console.info(
+            "[LESSON] Quizzes loaded:",
+            quizzesRes.data.data?.length || 0,
+          );
         }
       } catch (quizErr) {
         console.warn("[LESSON] Failed to load quizzes:", quizErr.message);
@@ -198,6 +206,17 @@ const LessonViewerPage = () => {
 
               {/* PDF Download */}
               {lesson.pdfUrl && (
+                <div className="mt-6 pt-6 border-t">
+                  <a
+                    href={lesson.pdfUrl}
+                    download
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download PDF Materials
+                  </a>
+                </div>
+              )}
 
               {/* Quizzes Section */}
               {quizzes.length > 0 && (
@@ -218,8 +237,12 @@ const LessonViewerPage = () => {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">{quiz.title}</p>
-                            <p className="text-sm text-gray-600">{quiz.questions?.length || 0} questions</p>
+                            <p className="font-semibold text-gray-900">
+                              {quiz.title}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {quiz.questions?.length || 0} questions
+                            </p>
                           </div>
                           <button
                             onClick={(e) => {
@@ -235,17 +258,6 @@ const LessonViewerPage = () => {
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
-                <div className="mt-6 pt-6 border-t">
-                  <a
-                    href={lesson.pdfUrl}
-                    download
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download PDF Materials
-                  </a>
                 </div>
               )}
             </div>
@@ -265,23 +277,6 @@ const LessonViewerPage = () => {
                     key={l.id}
                     onClick={() =>
                       navigate(`/course/${courseId}/lesson/${l.id}`)
-
-      {/* Quiz Modal */}
-      {showQuizModal && selectedQuiz && (
-        <QuizModal
-          quiz={selectedQuiz}
-          onClose={() => {
-            setShowQuizModal(false);
-            setSelectedQuiz(null);
-          }}
-          onSubmit={() => {
-            setShowQuizModal(false);
-            setSelectedQuiz(null);
-            // Optionally refresh lesson data
-            fetchLessonData();
-          }}
-        />
-      )}
                     }
                     className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
                       l.id === lesson.id
@@ -332,6 +327,23 @@ const LessonViewerPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Quiz Modal */}
+      {showQuizModal && selectedQuiz && (
+        <QuizModal
+          quiz={selectedQuiz}
+          onClose={() => {
+            setShowQuizModal(false);
+            setSelectedQuiz(null);
+          }}
+          onSubmit={() => {
+            setShowQuizModal(false);
+            setSelectedQuiz(null);
+            // Optionally refresh lesson data
+            fetchLessonData();
+          }}
+        />
+      )}
     </div>
   );
 };

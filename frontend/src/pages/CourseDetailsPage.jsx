@@ -31,16 +31,19 @@ const CourseDetailsPage = () => {
       console.info("[COURSE] Loading course details - ID:", id);
       const response = await courseService.getCourseById(id);
 
-        // Fetch exams for this course
-        try {
-          const examsRes = await examService.getExamByCourse(id);
-          if (examsRes.data.success) {
-            setExams(examsRes.data.data || []);
-            console.info("[COURSE] Exams loaded:", examsRes.data.data?.length || 0);
-          }
-        } catch (examErr) {
-          console.warn("[COURSE] Failed to load exams:", examErr.message);
+      // Fetch exams for this course
+      try {
+        const examsRes = await examService.getExamByCourse(id);
+        if (examsRes.data.success) {
+          setExams(examsRes.data.data || []);
+          console.info(
+            "[COURSE] Exams loaded:",
+            examsRes.data.data?.length || 0,
+          );
         }
+      } catch (examErr) {
+        console.warn("[COURSE] Failed to load exams:", examErr.message);
+      }
       if (response.data.success) {
         console.info("[COURSE] Loaded:", response.data.data.title);
         setCourse(response.data.data);
@@ -275,12 +278,18 @@ const CourseDetailsPage = () => {
                 </div>
                 <div className="divide-y">
                   {exams.map((exam) => (
-                    <div key={exam.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div
+                      key={exam.id}
+                      className="p-4 hover:bg-gray-50 transition-colors"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{exam.title}</p>
+                          <p className="font-medium text-gray-900">
+                            {exam.title}
+                          </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {exam.questions?.length || 0} questions • Passing score: {exam.passingScore}%
+                            {exam.questions?.length || 0} questions • Passing
+                            score: {exam.passingScore}%
                           </p>
                         </div>
                         <button

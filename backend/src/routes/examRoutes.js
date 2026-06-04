@@ -1,4 +1,4 @@
-import express from 'express'
+import express from "express";
 import {
   getExamById,
   getExamByCourse,
@@ -6,45 +6,48 @@ import {
   submitExam,
   getUserExamHistory,
   deleteExam,
-} from '../controllers/examController.js'
-import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.js'
+} from "../controllers/examController.js";
+import {
+  authMiddleware,
+  adminMiddleware,
+} from "../middlewares/authMiddleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
 /**
  * GET /api/exams/:id
  * Get exam by ID with questions
  */
-router.get('/:id', getExamById)
+router.get("/:id", getExamById);
 
 /**
  * GET /api/exams/course/:courseId
  * Get exam for a course
  */
-router.get('/course/:courseId', getExamByCourse)
+router.get("/course/:courseId", getExamByCourse);
 
 /**
  * POST /api/exams
  * Create exam (admin only)
  */
-router.post('/', authMiddleware, adminMiddleware, createExam)
+router.post("/", authMiddleware, adminMiddleware, createExam);
 
 /**
  * POST /api/exams/:examId/submit
  * Submit exam and get score
  */
-router.post('/:examId/submit', authMiddleware, submitExam)
+router.post("/:examId/submit", authMiddleware, submitExam);
 
 /**
  * GET /api/exams/:examId/history
  * Get user's exam history
  */
-router.get('/:examId/history', authMiddleware, getUserExamHistory)
+router.get("/:examId/history", authMiddleware, getUserExamHistory);
 
 /**
  * DELETE /api/exams/:id
  * Delete exam (admin only)
  */
-router.delete('/:id', authMiddleware, adminMiddleware, deleteExam)
+router.delete("/:id", authMiddleware, adminMiddleware, deleteExam);
 
-export default router
+export default router;

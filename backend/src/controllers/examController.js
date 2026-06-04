@@ -1,17 +1,17 @@
-import prisma from '../utils/db.js'
+import prisma from "../utils/db.js";
 
 /**
  * Get exam by ID with questions
  */
 export const getExamById = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
     const exam = await prisma.exam.findUnique({
       where: { id: parseInt(id) },
       include: {
         questions: {
-          orderBy: { position: 'asc' },
+          orderBy: { position: "asc" },
           select: {
             id: true,
             text: true,
@@ -27,34 +27,34 @@ export const getExamById = async (req, res) => {
           },
         },
       },
-    })
+    });
 
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Exam not found',
-      })
+        message: "Exam not found",
+      });
     }
 
     res.status(200).json({
       success: true,
       data: exam,
-    })
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch exam',
-    })
+      message: "Failed to fetch exam",
+    });
   }
-}
+};
 
 /**
  * Get exam for a course
  */
 export const getExamByCourse = async (req, res) => {
   try {
-    const { courseId } = req.params
+    const { courseId } = req.params;
 
     const exam = await prisma.exam.findFirst({
       where: { courseId: parseInt(courseId) },
@@ -63,61 +63,61 @@ export const getExamByCourse = async (req, res) => {
           select: { id: true },
         },
       },
-    })
+    });
 
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Exam not found for this course',
-      })
+        message: "Exam not found for this course",
+      });
     }
 
     res.status(200).json({
       success: true,
       data: exam,
-    })
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch exam',
-    })
+      message: "Failed to fetch exam",
+    });
   }
-}
+};
 
 /**
  * Create exam (Admin only)
  */
 export const createExam = async (req, res) => {
   try {
-    const { courseId, title, description, passingScore, questions } = req.body
-    const userId = req.user.userId
+    const { courseId, title, description, passingScore, questions } = req.body;
+    const userId = req.user.userId;
 
     // Validation
     if (!courseId || !title || !questions || questions.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Course ID, title, and questions are required',
-      })
+        message: "Course ID, title, and questions are required",
+      });
     }
 
     // Check if course exists and user is creator
     const course = await prisma.course.findUnique({
       where: { id: parseInt(courseId) },
-    })
+    });
 
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found',
-      })
+        message: "Course not found",
+      });
     }
 
     if (course.creatorId !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to create exams for this course',
-      })
+        message: "You do not have permission to create exams for this course",
+      });
     }
 
     // Create exam with questions
@@ -138,38 +138,38 @@ export const createExam = async (req, res) => {
       },
       include: {
         questions: {
-          orderBy: { position: 'asc' },
+          orderBy: { position: "asc" },
         },
       },
-    })
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Exam created successfully',
+      message: "Exam created successfully",
       data: exam,
-    })
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create exam',
-    })
+      message: "Failed to create exam",
+    });
   }
-}
+};
 
 /**
  * Submit exam and calculate score
  */
 export const submitExam = async (req, res) => {
   try {
-    const { examId, answers } = req.body
-    const userId = req.user.userId
+    const { examId, answers } = req.body;
+    const userId = req.user.userId;
 
     if (!examId || !answers) {
       return res.status(400).json({
         success: false,
-        message: 'Exam ID and answers are required',
-      })
+        message: "Exam ID and answers are required",
+      });
     }
 
     // Get exam with all questions
@@ -177,27 +177,27 @@ export const submitExam = async (req, res) => {
       where: { id: parseInt(examId) },
       include: {
         questions: {
-          orderBy: { position: 'asc' },
+          orderBy: { position: "asc" },
         },
       },
-    })
+    });
 
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Exam not found',
-      })
+        message: "Exam not found",
+      });
     }
 
     // Calculate score
-    let correctCount = 0
+    let correctCount = 0;
     exam.questions.forEach((q) => {
       if (answers[q.id.toString()] === q.correctAnswer) {
-        correctCount++
+        correctCount++;
       }
-    })
-    const score = Math.round((correctCount / exam.questions.length) * 100)
-    const passed = score >= exam.passingScore
+    });
+    const score = Math.round((correctCount / exam.questions.length) * 100);
+    const passed = score >= exam.passingScore;
 
     // Save exam result
     const userExam = await prisma.userExam.upsert({
@@ -224,11 +224,11 @@ export const submitExam = async (req, res) => {
         },
         completedAt: new Date(),
       },
-    })
+    });
 
     res.status(200).json({
       success: true,
-      message: 'Exam submitted successfully',
+      message: "Exam submitted successfully",
       data: {
         score,
         correctAnswers: correctCount,
@@ -237,23 +237,23 @@ export const submitExam = async (req, res) => {
         passingScore: exam.passingScore,
         attempts: userExam.attempts,
       },
-    })
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to submit exam',
-    })
+      message: "Failed to submit exam",
+    });
   }
-}
+};
 
 /**
  * Get user's exam history
  */
 export const getUserExamHistory = async (req, res) => {
   try {
-    const { examId } = req.params
-    const userId = req.user.userId
+    const { examId } = req.params;
+    const userId = req.user.userId;
 
     const userExam = await prisma.userExam.findUnique({
       where: {
@@ -271,35 +271,35 @@ export const getUserExamHistory = async (req, res) => {
           },
         },
       },
-    })
+    });
 
     if (!userExam) {
       return res.status(404).json({
         success: false,
-        message: 'Exam attempt not found',
-      })
+        message: "Exam attempt not found",
+      });
     }
 
     res.status(200).json({
       success: true,
       data: userExam,
-    })
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch exam history',
-    })
+      message: "Failed to fetch exam history",
+    });
   }
-}
+};
 
 /**
  * Delete exam (Admin only)
  */
 export const deleteExam = async (req, res) => {
   try {
-    const { id } = req.params
-    const userId = req.user.userId
+    const { id } = req.params;
+    const userId = req.user.userId;
 
     // Check if exam exists and user is course creator
     const exam = await prisma.exam.findUnique({
@@ -309,35 +309,35 @@ export const deleteExam = async (req, res) => {
           select: { creatorId: true },
         },
       },
-    })
+    });
 
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Exam not found',
-      })
+        message: "Exam not found",
+      });
     }
 
     if (exam.course.creatorId !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to delete this exam',
-      })
+        message: "You do not have permission to delete this exam",
+      });
     }
 
     await prisma.exam.delete({
       where: { id: parseInt(id) },
-    })
+    });
 
     res.status(200).json({
       success: true,
-      message: 'Exam deleted successfully',
-    })
+      message: "Exam deleted successfully",
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete exam',
-    })
+      message: "Failed to delete exam",
+    });
   }
-}
+};

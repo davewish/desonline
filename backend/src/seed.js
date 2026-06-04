@@ -6,6 +6,11 @@ async function main() {
   console.log("🌱 Starting seed...");
 
   // Clear existing data
+  await prisma.userExam.deleteMany({});
+  await prisma.userQuiz.deleteMany({});
+  await prisma.question.deleteMany({});
+  await prisma.exam.deleteMany({});
+  await prisma.quiz.deleteMany({});
   await prisma.enrollment.deleteMany({});
   await prisma.lesson.deleteMany({});
   await prisma.course.deleteMany({});
@@ -180,7 +185,133 @@ async function main() {
 
   console.log("✅ Sample enrollments created");
 
-  console.log("🎉 Seed completed successfully!");
+  // Create quizzes for each lesson
+  const lessons = await prisma.lesson.findMany();
+  
+  for (const lesson of lessons) {
+    await prisma.quiz.create({
+      data: {
+        title: `Quiz: ${lesson.title}`,
+        description: `Test your knowledge on ${lesson.title}`,
+        lessonId: lesson.id,
+        questions: {
+          create: [
+            {
+              text: `What is the main purpose of ${lesson.title}?`,
+              options: [
+                "To structure content",
+                "To add styling",
+                "To add interactivity",
+                "All of the above",
+              ],
+              correctAnswer: 0,
+              position: 1,
+            },
+            {
+              text: `Which concept is most important in ${lesson.title}?`,
+              options: [
+                "Variables",
+                "Functions",
+                "Classes",
+                "All are important",
+              ],
+              correctAnswer: 3,
+              position: 2,
+            },
+            {
+              text: `How should you practice ${lesson.title}?`,
+              options: [
+                "Read only",
+                "Watch videos only",
+                "Build projects",
+                "All of the above",
+              ],
+              correctAnswer: 3,
+              position: 3,
+            },
+          ],
+        },
+      },
+    });
+  }
+  
+  console.log("✅ Quizzes created for all lessons");
+
+  // Create exams for each course
+  const allCourses = await prisma.course.findMany();
+  
+  for (const course of allCourses) {
+    await prisma.exam.create({
+      data: {
+        title: `Final Exam: ${course.title}`,
+        description: `Comprehensive exam covering all topics in ${course.title}`,
+        courseId: course.id,
+        passingScore: 70,
+        questions: {
+          create: [
+            {
+              text: "What is the primary goal of this course?",
+              options: [
+                "To learn basics",
+                "To master advanced topics",
+                "To apply knowledge in projects",
+                "All of the above",
+              ],
+              correctAnswer: 3,
+              position: 1,
+            },
+            {
+              text: "Which learning approach is most effective?",
+              options: [
+                "Passive reading",
+                "Active practice",
+                "Group discussion",
+                "Combination of all",
+              ],
+              correctAnswer: 3,
+              position: 2,
+            },
+            {
+              text: "How often should you practice?",
+              options: ["Once a week", "Daily", "Whenever possible", "Never"],
+              correctAnswer: 2,
+              position: 3,
+            },
+            {
+              text: "What is the importance of projects?",
+              options: [
+                "To waste time",
+                "To apply concepts practically",
+                "To improve portfolio",
+                "Both 2 and 3",
+              ],
+              correctAnswer: 3,
+              position: 4,
+            },
+            {
+              text: "When should you review course material?",
+              options: [
+                "Only before exams",
+                "Regularly throughout the course",
+                "Never",
+                "Only once at the end",
+              ],
+              correctAnswer: 1,
+              position: 5,
+            },
+            {
+              text: "What is the passing score for this exam?",
+              options: ["50%", "60%", "70%", "80%"],
+              correctAnswer: 2,
+              position: 6,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  console.log("✅ Exams created for all courses");
   console.log("\nTest Credentials:");
   console.log("  Admin: admin@desonline.com / admin123");
   console.log("  User 1: user@desonline.com / user123");
