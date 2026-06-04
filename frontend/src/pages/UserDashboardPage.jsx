@@ -225,28 +225,28 @@ const UserDashboardPage = () => {
                         key={enrollment.id}
                         className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
                       >
-                        <div className="flex items-start gap-6 p-6">
+                        <div className="flex flex-col md:flex-row items-start gap-3 md:gap-6 p-4 md:p-6">
                           {enrollment.course?.thumbnail && (
                             <img
                               src={enrollment.course.thumbnail}
                               alt={enrollment.course.title}
-                              className="w-40 h-24 object-cover rounded-lg flex-shrink-0"
+                              className="w-full md:w-40 h-32 md:h-24 object-cover rounded-lg flex-shrink-0"
                             />
                           )}
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                          <div className="flex-1 w-full">
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                               {enrollment.course?.title}
                             </h3>
-                            <p className="text-gray-600 mb-4 line-clamp-2">
+                            <p className="text-sm md:text-base text-gray-600 mb-4 line-clamp-2">
                               {enrollment.course?.description}
                             </p>
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 mr-4">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                              <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-semibold text-gray-700">
+                                  <span className="text-xs md:text-sm font-semibold text-gray-700">
                                     Progress
                                   </span>
-                                  <span className="text-sm font-bold text-blue-600">
+                                  <span className="text-xs md:text-sm font-bold text-blue-600">
                                     {enrollment.progress}%
                                   </span>
                                 </div>
@@ -261,7 +261,7 @@ const UserDashboardPage = () => {
                                 onClick={() =>
                                   handleContinueCourse(enrollment.courseId)
                                 }
-                                className="btn-primary px-6 py-2"
+                                className="btn-primary px-4 md:px-6 py-2 w-full md:w-auto"
                               >
                                 Continue
                               </button>

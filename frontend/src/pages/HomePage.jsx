@@ -49,14 +49,14 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-block mb-4 px-4 py-2 bg-white/20 rounded-full backdrop-blur-md">
-                <span className="text-sm font-semibold">Welcome to DesOnline</span>
+                <span className="text-sm font-semibold">
+                  Welcome to DesOnline
+                </span>
               </div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                 {t("hero.title")}
               </h1>
-              <p className="text-xl text-blue-100 mb-4">
-                {t("hero.subtitle")}
-              </p>
+              <p className="text-xl text-blue-100 mb-4">{t("hero.subtitle")}</p>
               <p className="text-lg text-blue-50 mb-8 leading-relaxed">
                 {t("hero.description")}
               </p>
@@ -113,16 +113,28 @@ const HomePage = () => {
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">3</div>
-              <p className="text-gray-700 font-semibold">{t("stats.students")}</p>
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">
+                3
+              </div>
+              <p className="text-gray-700 font-semibold">
+                {t("stats.students")}
+              </p>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-purple-600 mb-2">4</div>
-              <p className="text-gray-700 font-semibold">{t("stats.courses")}</p>
+              <div className="text-4xl md:text-5xl font-bold text-purple-600 mb-2">
+                4
+              </div>
+              <p className="text-gray-700 font-semibold">
+                {t("stats.courses")}
+              </p>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-green-600 mb-2">1</div>
-              <p className="text-gray-700 font-semibold">{t("stats.instructors")}</p>
+              <div className="text-4xl md:text-5xl font-bold text-green-600 mb-2">
+                1
+              </div>
+              <p className="text-gray-700 font-semibold">
+                {t("stats.instructors")}
+              </p>
             </div>
           </div>
         </div>
@@ -169,9 +181,7 @@ const HomePage = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-3">
                 {t("features.selfPaced.title")}
               </h3>
-              <p className="text-gray-600">
-                {t("features.selfPaced.desc")}
-              </p>
+              <p className="text-gray-600">{t("features.selfPaced.desc")}</p>
             </div>
           </div>
         </div>
@@ -184,9 +194,7 @@ const HomePage = () => {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               {t("courses.ourCourses")}
             </h2>
-            <p className="text-xl text-gray-600">
-              {t("courses.learnToday")}
-            </p>
+            <p className="text-xl text-gray-600">{t("courses.learnToday")}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             {courses.map((course) => (
@@ -194,7 +202,9 @@ const HomePage = () => {
                 key={course.id}
                 className="card overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2"
               >
-                <div className={`bg-gradient-to-br ${course.color} h-40 flex items-center justify-center relative overflow-hidden`}>
+                <div
+                  className={`bg-gradient-to-br ${course.color} h-40 flex items-center justify-center relative overflow-hidden`}
+                >
                   <div className="absolute inset-0 opacity-10">
                     <div className="w-40 h-40 bg-white rounded-full mix-blend-multiply filter blur-xl"></div>
                   </div>
@@ -240,12 +250,8 @@ const HomePage = () => {
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="container text-center">
-          <h2 className="text-4xl font-bold mb-4">
-            {t("cta.title")}
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            {t("cta.subtitle")}
-          </p>
+          <h2 className="text-4xl font-bold mb-4">{t("cta.title")}</h2>
+          <p className="text-xl text-blue-100 mb-8">{t("cta.subtitle")}</p>
           {!isAuthenticated && (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

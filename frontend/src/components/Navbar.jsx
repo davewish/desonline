@@ -24,11 +24,11 @@ const Navbar = () => {
 
   const handleLanguageChange = (lang) => {
     i18n.changeLanguage(lang);
-    localStorage.setItem('language', lang);
+    localStorage.setItem("language", lang);
     setLanguageMenuOpen(false);
   };
 
-  const currentLanguage = i18n.language === 'ti' ? 'Tigrigna' : 'English';
+  const currentLanguage = i18n.language === "ti" ? "Tigrigna" : "English";
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -73,7 +73,9 @@ const Navbar = () => {
                 )}
 
                 <div className="flex items-center gap-4 border-l pl-6">
-                  <span className="text-gray-700">{t("nav.hello")}, {user?.name}</span>
+                  <span className="text-gray-700">
+                    {t("nav.hello")}, {user?.name}
+                  </span>
                   <button
                     onClick={handleLogout}
                     className="text-red-600 hover:text-red-700 font-semibold flex items-center gap-2"
@@ -106,17 +108,21 @@ const Navbar = () => {
               {languageMenuOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg z-10">
                   <button
-                    onClick={() => handleLanguageChange('en')}
+                    onClick={() => handleLanguageChange("en")}
                     className={`block w-full text-left px-4 py-2 ${
-                      i18n.language === 'en' ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                      i18n.language === "en"
+                        ? "bg-blue-100 text-blue-600 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     English
                   </button>
                   <button
-                    onClick={() => handleLanguageChange('ti')}
+                    onClick={() => handleLanguageChange("ti")}
                     className={`block w-full text-left px-4 py-2 ${
-                      i18n.language === 'ti' ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                      i18n.language === "ti"
+                        ? "bg-blue-100 text-blue-600 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     ትግርኛ (Tigrigna)
@@ -220,17 +226,21 @@ const Navbar = () => {
               {languageMenuOpen && (
                 <div className="mt-2 space-y-1">
                   <button
-                    onClick={() => handleLanguageChange('en')}
+                    onClick={() => handleLanguageChange("en")}
                     className={`block w-full text-left px-4 py-2 rounded ${
-                      i18n.language === 'en' ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                      i18n.language === "en"
+                        ? "bg-blue-100 text-blue-600 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     English
                   </button>
                   <button
-                    onClick={() => handleLanguageChange('ti')}
+                    onClick={() => handleLanguageChange("ti")}
                     className={`block w-full text-left px-4 py-2 rounded ${
-                      i18n.language === 'ti' ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                      i18n.language === "ti"
+                        ? "bg-blue-100 text-blue-600 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     ትግርኛ (Tigrigna)
