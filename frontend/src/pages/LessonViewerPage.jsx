@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
-import { courseService, lessonService } from "../services/api";
+import { Download, ChevronLeft, ChevronRight, AlertCircle, BookOpen } from "lucide-react";
+import { courseService, lessonService, quizService } from "../services/api";
+import QuizModal from "../components/QuizModal";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
@@ -12,6 +13,9 @@ const LessonViewerPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+  const [quizzes, setQuizzes] = useState([]);
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState(null);
 
   useEffect(() => {
     fetchLessonData();
@@ -52,6 +56,17 @@ const LessonViewerPage = () => {
       const lessons = lessonsRes.data.data.lessons || [];
       setAllLessons(lessons);
 
+
+      // Fetch quizzes for this lesson
+      try {
+        const quizzesRes = await quizService.getQuizzesByLesson(lessonId);
+        if (quizzesRes.data.success) {
+          setQuizzes(quizzesRes.data.data || []);
+          console.info("[LESSON] Quizzes loaded:", quizzesRes.data.data?.length || 0);
+        }
+      } catch (quizErr) {
+        console.warn("[LESSON] Failed to load quizzes:", quizErr.message);
+      }
       // Find current lesson index
       const index = lessons.findIndex((l) => l.id === parseInt(lessonId));
       setCurrentLessonIndex(index >= 0 ? index : 0);
@@ -183,6 +198,45 @@ const LessonViewerPage = () => {
 
               {/* PDF Download */}
               {lesson.pdfUrl && (
+
+              {/* Quizzes Section */}
+              {quizzes.length > 0 && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Lesson Quizzes
+                  </h3>
+                  <div className="space-y-3">
+                    {quizzes.map((quiz) => (
+                      <button
+                        key={quiz.id}
+                        onClick={() => {
+                          setSelectedQuiz(quiz);
+                          setShowQuizModal(true);
+                        }}
+                        className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">{quiz.title}</p>
+                            <p className="text-sm text-gray-600">{quiz.questions?.length || 0} questions</p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedQuiz(quiz);
+                              setShowQuizModal(true);
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm"
+                          >
+                            Take Quiz
+                          </button>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
                 <div className="mt-6 pt-6 border-t">
                   <a
                     href={lesson.pdfUrl}
@@ -211,6 +265,23 @@ const LessonViewerPage = () => {
                     key={l.id}
                     onClick={() =>
                       navigate(`/course/${courseId}/lesson/${l.id}`)
+
+      {/* Quiz Modal */}
+      {showQuizModal && selectedQuiz && (
+        <QuizModal
+          quiz={selectedQuiz}
+          onClose={() => {
+            setShowQuizModal(false);
+            setSelectedQuiz(null);
+          }}
+          onSubmit={() => {
+            setShowQuizModal(false);
+            setSelectedQuiz(null);
+            // Optionally refresh lesson data
+            fetchLessonData();
+          }}
+        />
+      )}
                     }
                     className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
                       l.id === lesson.id

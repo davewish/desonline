@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AlertCircle, Play, BookOpen } from "lucide-react";
-import { courseService, enrollmentService } from "../services/api";
+import { AlertCircle, Play, BookOpen, FileText } from "lucide-react";
+import { courseService, enrollmentService, examService } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import ExamModal from "../components/ExamModal";
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
@@ -13,6 +14,9 @@ const CourseDetailsPage = () => {
   const [error, setError] = useState("");
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [exams, setExams] = useState([]);
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [selectedExam, setSelectedExam] = useState(null);
 
   useEffect(() => {
     fetchCourse();
@@ -26,6 +30,17 @@ const CourseDetailsPage = () => {
       setLoading(true);
       console.info("[COURSE] Loading course details - ID:", id);
       const response = await courseService.getCourseById(id);
+
+        // Fetch exams for this course
+        try {
+          const examsRes = await examService.getExamByCourse(id);
+          if (examsRes.data.success) {
+            setExams(examsRes.data.data || []);
+            console.info("[COURSE] Exams loaded:", examsRes.data.data?.length || 0);
+          }
+        } catch (examErr) {
+          console.warn("[COURSE] Failed to load exams:", examErr.message);
+        }
       if (response.data.success) {
         console.info("[COURSE] Loaded:", response.data.data.title);
         setCourse(response.data.data);
@@ -248,9 +263,61 @@ const CourseDetailsPage = () => {
                 ))}
               </div>
             </div>
+
+            {/* Course Exams */}
+            {isEnrolled && exams.length > 0 && (
+              <div className="bg-white rounded-lg shadow mt-6">
+                <div className="p-6 border-b">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Course Exams
+                  </h3>
+                </div>
+                <div className="divide-y">
+                  {exams.map((exam) => (
+                    <div key={exam.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{exam.title}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {exam.questions?.length || 0} questions • Passing score: {exam.passingScore}%
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedExam(exam);
+                            setShowExamModal(true);
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm"
+                        >
+                          Take Exam
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Exam Modal */}
+      {showExamModal && selectedExam && (
+        <ExamModal
+          exam={selectedExam}
+          onClose={() => {
+            setShowExamModal(false);
+            setSelectedExam(null);
+          }}
+          onSubmit={() => {
+            setShowExamModal(false);
+            setSelectedExam(null);
+            // Optionally refresh course data
+            fetchCourse();
+          }}
+        />
+      )}
     </div>
   );
 };
