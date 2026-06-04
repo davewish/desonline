@@ -1,27 +1,24 @@
 import React, { useState } from "react";
 import { X, CheckCircle, XCircle, Download } from "lucide-react";
-import { examService } from "../services/api.js";
 
 const ExamModal = ({ exam, onClose, onSubmit }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   if (!exam) return null;
 
   const question = exam.questions[currentQuestion];
   const totalQuestions = exam.questions.length;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
-  const passingScore = exam.passingScore || 70;
+  const passingScore = 70;
 
   const handleSelectAnswer = (answerIndex) => {
     if (!submitted) {
       setSelectedAnswers({
         ...selectedAnswers,
-        [question.id.toString()]: answerIndex,
+        [currentQuestion]: answerIndex,
       });
     }
   };
@@ -38,32 +35,28 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await examService.submitExam(exam.id, selectedAnswers);
-      if (response.data.success) {
-        setScore(response.data.data.score);
-        setSubmitted(true);
-
-        // Call onSubmit callback
-        if (onSubmit) {
-          onSubmit({
-            examId: exam.id,
-            score: response.data.data.score,
-            correctAnswers: response.data.data.correctAnswers,
-            totalQuestions: response.data.data.totalQuestions,
-            passed: response.data.data.passed,
-            answers: selectedAnswers,
-          });
-        }
+  const handleSubmit = () => {
+    // Calculate score
+    let correctCount = 0;
+    exam.questions.forEach((q, index) => {
+      if (selectedAnswers[index] === q.correctAnswer) {
+        correctCount++;
       }
-    } catch (err) {
-      console.error("Exam submission error:", err);
-      setError("Failed to submit exam. Please try again.");
-    } finally {
-      setLoading(false);
+    });
+    const percentage = Math.round((correctCount / totalQuestions) * 100);
+    setScore(percentage);
+    setSubmitted(true);
+
+    // Call onSubmit callback
+    if (onSubmit) {
+      onSubmit({
+        examId: exam.id,
+        score: percentage,
+        correctAnswers: correctCount,
+        totalQuestions: totalQuestions,
+        passed: percentage >= passingScore,
+        answers: selectedAnswers,
+      });
     }
   };
 
@@ -184,7 +177,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswers[question.id.toString()] === index
+                  selectedAnswers[currentQuestion] === index
                     ? "border-purple-600 bg-purple-50"
                     : "border-gray-200 hover:border-gray-300 bg-gray-50"
                 }`}
@@ -192,12 +185,12 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedAnswers[question.id.toString()] === index
+                      selectedAnswers[currentQuestion] === index
                         ? "border-purple-600 bg-purple-600"
                         : "border-gray-300"
                     }`}
                   >
-                    {selectedAnswers[question.id.toString()] === index && (
+                    {selectedAnswers[currentQuestion] === index && (
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     )}
                   </div>
@@ -235,30 +228,23 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
-                {loading ? "Submitting..." : "Submit Exam"}
+                Submit Exam
               </button>
             )}
           </div>
 
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-              {error}
-            </div>
-          )}
-
           {/* Question Indicator Dots */}
           <div className="mt-8 flex flex-wrap gap-2">
-            {exam.questions.map((q, index) => (
+            {exam.questions.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestion(index)}
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentQuestion
                     ? "bg-purple-600 w-8"
-                    : selectedAnswers[q.id.toString()] !== undefined
+                    : selectedAnswers[index] !== undefined
                       ? "bg-green-600"
                       : "bg-gray-300"
                 }`}

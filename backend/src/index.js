@@ -13,8 +13,6 @@ import authRoutes from './routes/authRoutes.js'
 import courseRoutes from './routes/courseRoutes.js'
 import lessonRoutes from './routes/lessonRoutes.js'
 import enrollmentRoutes from './routes/enrollmentRoutes.js'
-import quizRoutes from './routes/quizRoutes.js'
-import examRoutes from './routes/examRoutes.js'
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
@@ -37,8 +35,6 @@ app.use('/api/auth', authRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/enrollments', enrollmentRoutes)
-app.use('/api/quizzes', quizRoutes)
-app.use('/api/exams', examRoutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
