@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, ChevronLeft, ChevronRight, AlertCircle, BookOpen } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { courseService, lessonService } from "../services/api";
-import QuizModal from "../components/QuizModal";
-import { getQuizByLessonId } from "../services/mockQuizData";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
@@ -14,8 +12,6 @@ const LessonViewerPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [quizScores, setQuizScores] = useState({});
 
   useEffect(() => {
     fetchLessonData();
@@ -87,15 +83,6 @@ const LessonViewerPage = () => {
       console.info("[LESSON] Navigating to next lesson:", nextLesson.title);
       navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
     }
-  };
-
-  const handleQuizSubmit = (result) => {
-    console.info("[LESSON] Quiz submitted:", result);
-    setQuizScores({
-      ...quizScores,
-      [result.quizId]: result,
-    });
-    // TODO: Send quiz result to backend API
   };
 
   if (loading) {
@@ -207,31 +194,6 @@ const LessonViewerPage = () => {
                   </a>
                 </div>
               )}
-
-              {/* Quiz Button */}
-              {getQuizByLessonId(lessonId) && (
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-1">
-                        <BookOpen className="w-4 h-4" />
-                        Test Your Knowledge
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Take the quiz to reinforce what you learned
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowQuiz(true)}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold whitespace-nowrap"
-                    >
-                      {quizScores[getQuizByLessonId(lessonId)?.id]
-                        ? `Retake Quiz (Score: ${quizScores[getQuizByLessonId(lessonId)?.id].score}%)`
-                        : "Take Quiz"}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -299,15 +261,6 @@ const LessonViewerPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Quiz Modal */}
-      {showQuiz && (
-        <QuizModal
-          quiz={getQuizByLessonId(lessonId)}
-          onClose={() => setShowQuiz(false)}
-          onSubmit={handleQuizSubmit}
-        />
-      )}
     </div>
   );
 };

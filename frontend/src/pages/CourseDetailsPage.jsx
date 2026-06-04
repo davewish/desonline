@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AlertCircle, Play, BookOpen, Award } from "lucide-react";
+import { AlertCircle, Play, BookOpen } from "lucide-react";
 import { courseService, enrollmentService } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
-import ExamModal from "../components/ExamModal";
-import { getExamByCourseId } from "../services/mockQuizData";
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
@@ -15,8 +13,6 @@ const CourseDetailsPage = () => {
   const [error, setError] = useState("");
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [showExam, setShowExam] = useState(false);
-  const [examScores, setExamScores] = useState({});
 
   useEffect(() => {
     fetchCourse();
@@ -86,15 +82,6 @@ const CourseDetailsPage = () => {
     } finally {
       setEnrolling(false);
     }
-  };
-
-  const handleExamSubmit = (result) => {
-    console.info("[EXAM] Exam submitted:", result);
-    setExamScores({
-      ...examScores,
-      [result.examId]: result,
-    });
-    // TODO: Send exam result to backend API
   };
 
   if (loading) {
