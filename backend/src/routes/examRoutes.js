@@ -15,16 +15,16 @@ import {
 const router = express.Router();
 
 /**
+ * GET /api/exams/course/:courseId
+ * Get exam for a course (specific route MUST come first)
+ */
+router.get("/course/:courseId", getExamByCourse);
+
+/**
  * GET /api/exams/:id
  * Get exam by ID with questions
  */
 router.get("/:id", getExamById);
-
-/**
- * GET /api/exams/course/:courseId
- * Get exam for a course
- */
-router.get("/course/:courseId", getExamByCourse);
 
 /**
  * POST /api/exams

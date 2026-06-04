@@ -15,16 +15,16 @@ import {
 const router = express.Router();
 
 /**
+ * GET /api/quizzes/lesson/:lessonId
+ * Get quizzes for a lesson (specific route MUST come first)
+ */
+router.get("/lesson/:lessonId", getQuizzesByLesson);
+
+/**
  * GET /api/quizzes/:id
  * Get quiz by ID with questions
  */
 router.get("/:id", getQuizById);
-
-/**
- * GET /api/quizzes/lesson/:lessonId
- * Get quizzes for a lesson
- */
-router.get("/lesson/:lessonId", getQuizzesByLesson);
 
 /**
  * POST /api/quizzes

@@ -56,7 +56,7 @@ export const getExamByCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
 
-    const exam = await prisma.exam.findFirst({
+    const exams = await prisma.exam.findMany({
       where: { courseId: parseInt(courseId) },
       include: {
         questions: {
@@ -65,16 +65,9 @@ export const getExamByCourse = async (req, res) => {
       },
     });
 
-    if (!exam) {
-      return res.status(404).json({
-        success: false,
-        message: "Exam not found for this course",
-      });
-    }
-
     res.status(200).json({
       success: true,
-      data: exam,
+      data: exams || [],
     });
   } catch (error) {
     console.error(error);

@@ -30,23 +30,24 @@ const CourseDetailsPage = () => {
       setLoading(true);
       console.info("[COURSE] Loading course details - ID:", id);
       const response = await courseService.getCourseById(id);
-
-      // Fetch exams for this course
-      try {
-        const examsRes = await examService.getExamByCourse(id);
-        if (examsRes.data.success) {
-          setExams(examsRes.data.data || []);
-          console.info(
-            "[COURSE] Exams loaded:",
-            examsRes.data.data?.length || 0,
-          );
-        }
-      } catch (examErr) {
-        console.warn("[COURSE] Failed to load exams:", examErr.message);
-      }
+      
       if (response.data.success) {
         console.info("[COURSE] Loaded:", response.data.data.title);
         setCourse(response.data.data);
+
+        // Fetch exams for this course
+        try {
+          const examsRes = await examService.getExamByCourse(id);
+          if (examsRes.data.success) {
+            setExams(examsRes.data.data || []);
+            console.info(
+              "[COURSE] Exams loaded:",
+              examsRes.data.data?.length || 0,
+            );
+          }
+        } catch (examErr) {
+          console.warn("[COURSE] Failed to load exams:", examErr.message);
+        }
       }
     } catch (err) {
       console.error(
