@@ -126,25 +126,6 @@ const LoginPage = () => {
             Register
           </a>
         </p>
-
-        {/* Test Credentials Info */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs font-semibold text-gray-600 mb-3">
-            TEST CREDENTIALS:
-          </p>
-          <div className="space-y-2 text-xs">
-            <div className="bg-blue-50 p-2 rounded">
-              <p className="font-semibold text-blue-900">Admin:</p>
-              <p className="text-blue-800">admin@desonline.com</p>
-              <p className="text-blue-800">admin123</p>
-            </div>
-            <div className="bg-purple-50 p-2 rounded">
-              <p className="font-semibold text-purple-900">User:</p>
-              <p className="text-purple-800">user@desonline.com</p>
-              <p className="text-purple-800">user123</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
