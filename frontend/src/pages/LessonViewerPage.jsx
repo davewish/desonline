@@ -71,6 +71,7 @@ const LessonViewerPage = () => {
             "[LESSON] Quizzes loaded:",
             quizzesRes.data.data?.length || 0,
           );
+          console.info("[LESSON] Quizzes loaded:", quizzesRes.data.data);
         }
       } catch (quizErr) {
         console.warn("[LESSON] Failed to load quizzes:", quizErr.message);

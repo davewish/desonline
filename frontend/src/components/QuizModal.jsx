@@ -10,14 +10,15 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  if (!quiz) return null;
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) return null;
 
   const question = quiz.questions[currentQuestion];
+  console.log("question", question);
   const totalQuestions = quiz.questions.length;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
 
   const handleSelectAnswer = (answerIndex) => {
-    if (!submitted) {
+    if (!submitted && question?.id) {
       setSelectedAnswers({
         ...selectedAnswers,
         [question.id.toString()]: answerIndex,
@@ -157,17 +158,17 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
         {/* Question */}
         <div className="p-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">
-            {question.question}
+            {question.text || question.question}
           </h3>
 
           {/* Answer Options */}
           <div className="space-y-3 mb-8">
-            {question.options.map((option, index) => (
+            {question?.options?.map((option, index) => (
               <button
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswers[question.id.toString()] === index
+                  selectedAnswers[question.id?.toString()] === index
                     ? "border-blue-600 bg-blue-50"
                     : "border-gray-200 hover:border-gray-300 bg-gray-50"
                 }`}
@@ -175,12 +176,12 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedAnswers[question.id.toString()] === index
+                      selectedAnswers[question.id?.toString()] === index
                         ? "border-blue-600 bg-blue-600"
                         : "border-gray-300"
                     }`}
                   >
-                    {selectedAnswers[currentQuestion] === index && (
+                    {selectedAnswers[question.id?.toString()] === index && (
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     )}
                   </div>
@@ -233,7 +234,7 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentQuestion
                     ? "bg-blue-600 w-8"
-                    : selectedAnswers[q.id.toString()] !== undefined
+                    : selectedAnswers[q.id?.toString()] !== undefined
                       ? "bg-green-600"
                       : "bg-gray-300"
                 }`}

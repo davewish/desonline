@@ -60,7 +60,13 @@ export const getExamByCourse = async (req, res) => {
       where: { courseId: parseInt(courseId) },
       include: {
         questions: {
-          select: { id: true },
+          orderBy: { position: "asc" },
+          select: {
+            id: true,
+            text: true,
+            options: true,
+            position: true,
+          },
         },
       },
     });

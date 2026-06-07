@@ -10,7 +10,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  if (!exam) return null;
+  if (!exam || !exam.questions || exam.questions.length === 0) return null;
 
   const question = exam.questions[currentQuestion];
   const totalQuestions = exam.questions.length;
@@ -18,7 +18,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   const passingScore = exam.passingScore || 70;
 
   const handleSelectAnswer = (answerIndex) => {
-    if (!submitted) {
+    if (!submitted && question?.id) {
       setSelectedAnswers({
         ...selectedAnswers,
         [question.id.toString()]: answerIndex,
@@ -174,17 +174,17 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
         {/* Question */}
         <div className="p-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">
-            {question.question}
+            {question.text || question.question}
           </h3>
 
           {/* Answer Options */}
           <div className="space-y-3 mb-8">
-            {question.options.map((option, index) => (
+            {question?.options?.map((option, index) => (
               <button
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswers[question.id.toString()] === index
+                  selectedAnswers[question.id?.toString()] === index
                     ? "border-purple-600 bg-purple-50"
                     : "border-gray-200 hover:border-gray-300 bg-gray-50"
                 }`}
@@ -192,12 +192,12 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedAnswers[question.id.toString()] === index
+                      selectedAnswers[question.id?.toString()] === index
                         ? "border-purple-600 bg-purple-600"
                         : "border-gray-300"
                     }`}
                   >
-                    {selectedAnswers[question.id.toString()] === index && (
+                    {selectedAnswers[question.id?.toString()] === index && (
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     )}
                   </div>
@@ -258,7 +258,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentQuestion
                     ? "bg-purple-600 w-8"
-                    : selectedAnswers[q.id.toString()] !== undefined
+                    : selectedAnswers[q.id?.toString()] !== undefined
                       ? "bg-green-600"
                       : "bg-gray-300"
                 }`}

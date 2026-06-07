@@ -61,7 +61,13 @@ export const getQuizzesByLesson = async (req, res) => {
       where: { lessonId: parseInt(lessonId) },
       include: {
         questions: {
-          select: { id: true },
+          orderBy: { position: "asc" },
+          select: {
+            id: true,
+            text: true,
+            options: true,
+            position: true,
+          },
         },
       },
     });
