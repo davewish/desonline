@@ -255,16 +255,10 @@ export const submitExam = async (req, res) => {
  */
 export const getUserExamHistory = async (req, res) => {
   try {
-    const { examId } = req.params;
     const userId = req.user.userId;
 
-    const userExam = await prisma.userExam.findUnique({
-      where: {
-        userId_examId: {
-          userId,
-          examId: parseInt(examId),
-        },
-      },
+    const userExams = await prisma.userExam.findMany({
+      where: { userId },
       include: {
         exam: {
           select: {
@@ -276,16 +270,9 @@ export const getUserExamHistory = async (req, res) => {
       },
     });
 
-    if (!userExam) {
-      return res.status(404).json({
-        success: false,
-        message: "Exam attempt not found",
-      });
-    }
-
     res.status(200).json({
       success: true,
-      data: userExam,
+      data: userExams,
     });
   } catch (error) {
     console.error(error);

@@ -257,16 +257,10 @@ export const submitQuiz = async (req, res) => {
  */
 export const getUserQuizHistory = async (req, res) => {
   try {
-    const { quizId } = req.params;
     const userId = req.user.userId;
 
-    const userQuiz = await prisma.userQuiz.findUnique({
-      where: {
-        userId_quizId: {
-          userId,
-          quizId: parseInt(quizId),
-        },
-      },
+    const userQuizzes = await prisma.userQuiz.findMany({
+      where: { userId },
       include: {
         quiz: {
           select: {
@@ -277,16 +271,9 @@ export const getUserQuizHistory = async (req, res) => {
       },
     });
 
-    if (!userQuiz) {
-      return res.status(404).json({
-        success: false,
-        message: "Quiz attempt not found",
-      });
-    }
-
     res.status(200).json({
       success: true,
-      data: userQuiz,
+      data: userQuizzes,
     });
   } catch (error) {
     console.error(error);

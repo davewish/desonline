@@ -36,7 +36,29 @@ const CourseDetailsPage = () => {
     if (isAuthenticated) {
       checkEnrollment();
     }
-  }, [id, isAuthenticated]);
+  }, [id]);
+
+  // Dedicated effect to load exam history whenever authentication state changes
+  useEffect(() => {
+    const loadExamHistory = async () => {
+      if (isAuthenticated) {
+        try {
+          console.info("[COURSE] Fetching user exam history...");
+          const historyRes = await examService.getUserExamHistory();
+          if (historyRes.data.success && Array.isArray(historyRes.data.data)) {
+            const historyMap = {};
+            historyRes.data.data.forEach((attempt) => {
+              historyMap[attempt.examId.toString()] = attempt;
+            });
+            setExamResults(historyMap);
+          }
+        } catch (err) {
+          console.warn("[COURSE] Could not load exam history:", err.message);
+        }
+      }
+    };
+    loadExamHistory();
+  }, [isAuthenticated]);
 
   const fetchCourse = async () => {
     try {
@@ -60,26 +82,6 @@ const CourseDetailsPage = () => {
           }
         } catch (examErr) {
           console.warn("[COURSE] Failed to load exams:", examErr.message);
-        }
-
-        // Fetch user's existing exam attempts/results
-        if (isAuthenticated) {
-          // Only fetch history if user is authenticated
-          try {
-            const historyRes = await examService.getUserExamHistory();
-            if (
-              historyRes.data.success &&
-              Array.isArray(historyRes.data.data)
-            ) {
-              const historyMap = {};
-              historyRes.data.data.forEach((attempt) => {
-                historyMap[attempt.examId.toString()] = attempt; // Ensure string keys
-              });
-              setExamResults(historyMap);
-            }
-          } catch (err) {
-            console.warn("[COURSE] Could not load exam history:", err.message);
-          }
         }
       }
     } catch (err) {
@@ -178,7 +180,7 @@ const CourseDetailsPage = () => {
     if (exam) {
       setExamResults((prev) => {
         const newResults = { ...prev };
-        delete newResults[examId];
+        delete newResults[examId.toString()];
         return newResults;
       });
       handleStartExam(exam);

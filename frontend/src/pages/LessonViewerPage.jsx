@@ -41,6 +41,28 @@ const LessonViewerPage = () => {
     fetchLessonData();
   }, [lessonId, courseId]);
 
+  // Dedicated effect to load quiz history whenever authentication state changes
+  useEffect(() => {
+    const loadQuizHistory = async () => {
+      if (isAuthenticated) {
+        try {
+          console.info("[LESSON] Fetching user quiz history...");
+          const historyRes = await quizService.getUserQuizHistory();
+          if (historyRes.data.success && Array.isArray(historyRes.data.data)) {
+            const historyMap = {};
+            historyRes.data.data.forEach((attempt) => {
+              historyMap[attempt.quizId.toString()] = attempt;
+            });
+            setQuizResults(historyMap);
+          }
+        } catch (err) {
+          console.warn("[LESSON] Could not load quiz history:", err.message);
+        }
+      }
+    };
+    loadQuizHistory();
+  }, [isAuthenticated]);
+
   const fetchLessonData = async () => {
     setLoading(true);
     try {
@@ -91,22 +113,6 @@ const LessonViewerPage = () => {
       // Find current lesson index
       const index = lessons.findIndex((l) => l.id === parseInt(lessonId));
       setCurrentLessonIndex(index >= 0 ? index : 0);
-
-      // Fetch user's existing quiz attempts/results
-      if (isAuthenticated) { // Only fetch history if user is authenticated
-        try {
-          const historyRes = await quizService.getUserQuizHistory();
-          if (historyRes.data.success && Array.isArray(historyRes.data.data)) {
-            const historyMap = {};
-            historyRes.data.data.forEach((attempt) => {
-              historyMap[attempt.quizId.toString()] = attempt; // Ensure string keys
-            });
-            setQuizResults(historyMap);
-          }
-        } catch (err) {
-          console.warn("[LESSON] Could not load quiz history:", err.message);
-        }
-      }
     } catch (err) {
       console.error(
         "[LESSON] Failed to load:",
@@ -116,7 +122,7 @@ const LessonViewerPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [lessonId, courseId, isAuthenticated]); // Add isAuthenticated to dependencies
+  };
 
   const handlePreviousLesson = () => {
     if (currentLessonIndex > 0) {
@@ -180,7 +186,7 @@ const LessonViewerPage = () => {
       // Clear local result to show quiz again
       setQuizResults((prev) => {
         const newResults = { ...prev };
-        delete newResults[quizId];
+        delete newResults[quizId.toString()];
         return newResults;
       });
       handleStartQuiz(quiz);
