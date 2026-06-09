@@ -190,7 +190,10 @@ export const submitExam = async (req, res) => {
 
     // Calculate score
     let correctCount = 0;
+    const correctAnswersMap = {};
+
     exam.questions.forEach((q) => {
+      correctAnswersMap[q.id.toString()] = q.correctAnswer;
       if (answers[q.id.toString()] === q.correctAnswer) {
         correctCount++;
       }
@@ -234,6 +237,7 @@ export const submitExam = async (req, res) => {
         totalQuestions: exam.questions.length,
         passed,
         passingScore: exam.passingScore,
+        answerKey: correctAnswersMap,
         attempts: userExam.attempts,
       },
     });

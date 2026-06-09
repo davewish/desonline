@@ -7,6 +7,8 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(null);
+  const [answerKey, setAnswerKey] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,6 +47,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
       const response = await examService.submitExam(exam.id, selectedAnswers);
       if (response.data.success) {
         setScore(response.data.data.score);
+        setAnswerKey(response.data.data.answerKey);
         setSubmitted(true);
 
         // Call onSubmit callback
@@ -72,6 +75,8 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
     setSelectedAnswers({});
     setSubmitted(false);
     setScore(null);
+    setAnswerKey(null);
+    setIsReviewing(false);
   };
 
   const handleDownloadCertificate = () => {
@@ -81,7 +86,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   };
 
   // Show results screen
-  if (submitted && score !== null) {
+  if (submitted && score !== null && !isReviewing) {
     const passed = score >= passingScore;
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -124,6 +129,12 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 Download Certificate
               </button>
             )}
+            <button
+              onClick={() => setIsReviewing(true)}
+              className="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg font-semibold hover:bg-blue-200 transition-colors"
+            >
+              Review Answers
+            </button>
             <button
               onClick={handleRetake}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -183,18 +194,30 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
               <button
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
-                className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswers[question.id?.toString()] === index
-                    ? "border-purple-600 bg-purple-50"
-                    : "border-gray-200 hover:border-gray-300 bg-gray-50"
-                }`}
+                disabled={submitted}
+                className={`w-full p-4 text-left rounded-lg border-2 transition-all 
+                  ${
+                    submitted && answerKey?.[question.id] === index
+                      ? "border-green-500 bg-green-50"
+                      : submitted &&
+                          selectedAnswers[question.id] === index &&
+                          answerKey?.[question.id] !== index
+                        ? "border-red-500 bg-red-50"
+                        : selectedAnswers[question.id] === index
+                          ? "border-purple-600 bg-purple-50"
+                          : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedAnswers[question.id?.toString()] === index
-                        ? "border-purple-600 bg-purple-600"
-                        : "border-gray-300"
+                      submitted && answerKey?.[question.id] === index
+                        ? "border-green-600 bg-green-600"
+                        : submitted && selectedAnswers[question.id] === index
+                          ? "border-red-600 bg-red-600"
+                          : selectedAnswers[question.id] === index
+                            ? "border-purple-600 bg-purple-600"
+                            : "border-gray-300"
                     }`}
                   >
                     {selectedAnswers[question.id?.toString()] === index && (
@@ -225,7 +248,14 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
               Previous
             </button>
 
-            {!isLastQuestion ? (
+            {isReviewing && isLastQuestion ? (
+              <button
+                onClick={() => setIsReviewing(false)}
+                className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Back to Results
+              </button>
+            ) : !isLastQuestion ? (
               <button
                 onClick={handleNext}
                 className="flex-1 px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"

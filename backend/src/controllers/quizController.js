@@ -195,7 +195,10 @@ export const submitQuiz = async (req, res) => {
 
     // Calculate score
     let correctCount = 0;
+    const correctAnswers = {};
+
     quiz.questions.forEach((q) => {
+      correctAnswers[q.id.toString()] = q.correctAnswer;
       if (answers[q.id.toString()] === q.correctAnswer) {
         correctCount++;
       }
@@ -236,6 +239,7 @@ export const submitQuiz = async (req, res) => {
         score,
         correctAnswers: correctCount,
         totalQuestions: quiz.questions.length,
+        answerKey: correctAnswers,
         attempts: userQuiz.attempts,
       },
     });
