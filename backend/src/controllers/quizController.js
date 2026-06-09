@@ -125,31 +125,60 @@ export const createQuiz = async (req, res) => {
       });
     }
 
-    // Create quiz with questions
-    const quiz = await prisma.quiz.create({
-      data: {
-        title,
-        description: description || null,
-        lessonId: parseInt(lessonId),
-        questions: {
-          create: questions.map((q, index) => ({
-            text: q.text,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            position: index,
-          })),
-        },
-      },
-      include: {
-        questions: {
-          orderBy: { position: "asc" },
-        },
-      },
+    // Check if a quiz already exists for this lesson
+    const existingQuiz = await prisma.quiz.findFirst({
+      where: { lessonId: parseInt(lessonId) },
     });
+
+    let quiz;
+    if (existingQuiz) {
+      // Update existing quiz
+      quiz = await prisma.quiz.update({
+        where: { id: existingQuiz.id },
+        data: {
+          title,
+          description: description || null,
+          questions: {
+            deleteMany: {}, // Remove old questions to replace with new set
+            create: questions.map((q, index) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              position: index,
+            })),
+          },
+        },
+        include: {
+          questions: { orderBy: { position: "asc" } },
+        },
+      });
+    } else {
+      // Create new quiz
+      quiz = await prisma.quiz.create({
+        data: {
+          title,
+          description: description || null,
+          lessonId: parseInt(lessonId),
+          questions: {
+            create: questions.map((q, index) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              position: index,
+            })),
+          },
+        },
+        include: {
+          questions: { orderBy: { position: "asc" } },
+        },
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: "Quiz created successfully",
+      message: existingQuiz
+        ? "Quiz updated successfully"
+        : "Quiz created successfully",
       data: quiz,
     });
   } catch (error) {

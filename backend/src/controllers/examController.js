@@ -119,32 +119,62 @@ export const createExam = async (req, res) => {
       });
     }
 
-    // Create exam with questions
-    const exam = await prisma.exam.create({
-      data: {
-        title,
-        description: description || null,
-        courseId: parseInt(courseId),
-        passingScore: passingScore || 70,
-        questions: {
-          create: questions.map((q, index) => ({
-            text: q.text,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            position: index,
-          })),
-        },
-      },
-      include: {
-        questions: {
-          orderBy: { position: "asc" },
-        },
-      },
+    // Check if an exam already exists for this course
+    const existingExam = await prisma.exam.findFirst({
+      where: { courseId: parseInt(courseId) },
     });
+
+    let exam;
+    if (existingExam) {
+      // Update existing exam
+      exam = await prisma.exam.update({
+        where: { id: existingExam.id },
+        data: {
+          title,
+          description: description || null,
+          passingScore: passingScore || 70,
+          questions: {
+            deleteMany: {}, // Replace questions
+            create: questions.map((q, index) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              position: index,
+            })),
+          },
+        },
+        include: {
+          questions: { orderBy: { position: "asc" } },
+        },
+      });
+    } else {
+      // Create new exam
+      exam = await prisma.exam.create({
+        data: {
+          title,
+          description: description || null,
+          courseId: parseInt(courseId),
+          passingScore: passingScore || 70,
+          questions: {
+            create: questions.map((q, index) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              position: index,
+            })),
+          },
+        },
+        include: {
+          questions: { orderBy: { position: "asc" } },
+        },
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: "Exam created successfully",
+      message: existingExam
+        ? "Exam updated successfully"
+        : "Exam created successfully",
       data: exam,
     });
   } catch (error) {

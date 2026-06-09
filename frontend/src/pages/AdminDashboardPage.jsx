@@ -150,7 +150,7 @@ const AdminDashboardPage = () => {
       console.info("[ADMIN] Creating course:", courseData.title);
       await courseService.createCourse(courseData);
       console.info("[ADMIN] Course created successfully:", courseData.title);
-      setSuccess("Course created successfully!");
+      setSuccess(response.data.message || "Course saved successfully!");
       setCourseData({ title: "", description: "", thumbnail: null });
       setShowCourseForm(false);
       fetchAdminCourses();
@@ -185,7 +185,7 @@ const AdminDashboardPage = () => {
       );
       await lessonService.createLesson(lessonData);
       console.info("[ADMIN] Lesson created successfully:", lessonData.title);
-      setSuccess("Lesson created successfully!");
+      setSuccess(response.data.message || "Lesson saved successfully!");
       setLessonData({
         courseId: "",
         title: "",
@@ -227,7 +227,7 @@ const AdminDashboardPage = () => {
       console.info("[ADMIN] Creating quiz:", quizData.title);
       const response = await quizService.createQuiz(quizData);
       if (response.data.success) {
-        setSuccess("Quiz created successfully!");
+        setSuccess(response.data.message || "Quiz saved successfully!");
         setQuizData({
           lessonId: "",
           title: "",
@@ -271,7 +271,7 @@ const AdminDashboardPage = () => {
       console.info("[ADMIN] Creating exam:", examData.title);
       const response = await examService.createExam(examData);
       if (response.data.success) {
-        setSuccess("Exam created successfully!");
+        setSuccess(response.data.message || "Exam saved successfully!");
         setExamData({
           courseId: "",
           title: "",
@@ -292,6 +292,52 @@ const AdminDashboardPage = () => {
       setError(err.response?.data?.message || "Failed to create exam");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load existing assessment when target is selected
+  const handleTargetSelection = async (type, id) => {
+    if (!id) return;
+
+    try {
+      if (type === "quiz") {
+        const res = await quizService.getQuizzesByLesson(id);
+        if (res.data.success && res.data.data.length > 0) {
+          const existing = res.data.data[0];
+          setQuizData({
+            lessonId: id,
+            title: existing.title,
+            description: existing.description || "",
+            questions: existing.questions.map((q) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+            })),
+          });
+        } else {
+          setQuizData((prev) => ({ ...prev, lessonId: id }));
+        }
+      } else if (type === "exam") {
+        const res = await examService.getExamByCourse(id);
+        if (res.data.success && res.data.data.length > 0) {
+          const existing = res.data.data[0];
+          setExamData({
+            courseId: id,
+            title: existing.title,
+            description: existing.description || "",
+            passingScore: existing.passingScore,
+            questions: existing.questions.map((q) => ({
+              text: q.text,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+            })),
+          });
+        } else {
+          setExamData((prev) => ({ ...prev, courseId: id }));
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch existing ${type}:`, err.message);
     }
   };
 
@@ -631,7 +677,7 @@ const AdminDashboardPage = () => {
                       <select
                         value={quizData.lessonId}
                         onChange={(e) =>
-                          setQuizData({ ...quizData, lessonId: e.target.value })
+                          handleTargetSelection("quiz", e.target.value)
                         }
                         className="input"
                       >
@@ -784,7 +830,11 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? "Creating..." : "Create Quiz"}
+                    {loading
+                      ? "Saving..."
+                      : quizData.questions[0].text
+                        ? "Save Quiz"
+                        : "Create Quiz"}
                   </button>
                 </form>
               </div>
@@ -828,7 +878,7 @@ const AdminDashboardPage = () => {
                       <select
                         value={examData.courseId}
                         onChange={(e) =>
-                          setExamData({ ...examData, courseId: e.target.value })
+                          handleTargetSelection("exam", e.target.value)
                         }
                         className="input"
                       >
@@ -995,7 +1045,11 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? "Creating..." : "Create Exam"}
+                    {loading
+                      ? "Saving..."
+                      : examData.questions[0].text
+                        ? "Save Exam"
+                        : "Create Exam"}
                   </button>
                 </form>
               </div>
