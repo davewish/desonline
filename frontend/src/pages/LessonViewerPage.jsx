@@ -16,10 +16,12 @@ import {
   quizService,
   enrollmentService,
 } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [lesson, setLesson] = useState(null);
   const [course, setCourse] = useState(null);
   const [allLessons, setAllLessons] = useState([]);
@@ -69,9 +71,7 @@ const LessonViewerPage = () => {
       setLesson(lessonData);
       console.info("[LESSON] Lesson loaded:", lessonData.title);
 
-      // Get all lessons for the course to enable navigation
-      const lessonsRes = await courseService.getCourseById(courseId);
-      const lessons = lessonsRes.data.data.lessons || [];
+      const lessons = courseData.lessons || []; // Use lessons from course data already fetched
       setAllLessons(lessons);
 
       // Fetch quizzes for this lesson
@@ -93,17 +93,19 @@ const LessonViewerPage = () => {
       setCurrentLessonIndex(index >= 0 ? index : 0);
 
       // Fetch user's existing quiz attempts/results
-      try {
-        const historyRes = await quizService.getUserQuizHistory(); // Assuming this exists based on schema
-        if (historyRes.data.success) {
-          const historyMap = {};
-          historyRes.data.data.forEach((attempt) => {
-            historyMap[attempt.quizId] = attempt;
-          });
-          setQuizResults(historyMap);
+      if (isAuthenticated) { // Only fetch history if user is authenticated
+        try {
+          const historyRes = await quizService.getUserQuizHistory();
+          if (historyRes.data.success && Array.isArray(historyRes.data.data)) {
+            const historyMap = {};
+            historyRes.data.data.forEach((attempt) => {
+              historyMap[attempt.quizId.toString()] = attempt; // Ensure string keys
+            });
+            setQuizResults(historyMap);
+          }
+        } catch (err) {
+          console.warn("[LESSON] Could not load quiz history:", err.message);
         }
-      } catch (err) {
-        console.warn("[LESSON] Could not load quiz history");
       }
     } catch (err) {
       console.error(
@@ -114,7 +116,7 @@ const LessonViewerPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lessonId, courseId, isAuthenticated]); // Add isAuthenticated to dependencies
 
   const handlePreviousLesson = () => {
     if (currentLessonIndex > 0) {
@@ -160,7 +162,7 @@ const LessonViewerPage = () => {
       if (response.data.success) {
         setQuizResults((prev) => ({
           ...prev,
-          [activeQuiz.id]: response.data.data,
+          [activeQuiz.id.toString()]: response.data.data,
         }));
         setActiveQuiz(null); // Return to list view which will now show results
       }
@@ -305,7 +307,8 @@ const LessonViewerPage = () => {
 
                   <div className="space-y-6">
                     {quizzes.map((quiz) => {
-                      const result = quizResults[quiz.id];
+                      // Use string key to ensure match
+                      const result = quizResults[quiz.id.toString()];
                       const isTaking = activeQuiz?.id === quiz.id;
 
                       if (isTaking) {

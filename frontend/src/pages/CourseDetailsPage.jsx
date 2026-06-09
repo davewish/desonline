@@ -63,17 +63,23 @@ const CourseDetailsPage = () => {
         }
 
         // Fetch user's existing exam attempts/results
-        try {
-          const historyRes = await examService.getUserExamHistory(); // Assuming this endpoint exists or similar
-          if (historyRes.data.success) {
-            const historyMap = {};
-            historyRes.data.data.forEach((attempt) => {
-              historyMap[attempt.examId] = attempt;
-            });
-            setExamResults(historyMap);
+        if (isAuthenticated) {
+          // Only fetch history if user is authenticated
+          try {
+            const historyRes = await examService.getUserExamHistory();
+            if (
+              historyRes.data.success &&
+              Array.isArray(historyRes.data.data)
+            ) {
+              const historyMap = {};
+              historyRes.data.data.forEach((attempt) => {
+                historyMap[attempt.examId.toString()] = attempt; // Ensure string keys
+              });
+              setExamResults(historyMap);
+            }
+          } catch (err) {
+            console.warn("[COURSE] Could not load exam history:", err.message);
           }
-        } catch (err) {
-          console.warn("[COURSE] Could not load exam history");
         }
       }
     } catch (err) {
@@ -155,7 +161,7 @@ const CourseDetailsPage = () => {
       if (response.data.success) {
         setExamResults((prev) => ({
           ...prev,
-          [activeExam.id]: response.data.data,
+          [activeExam.id.toString()]: response.data.data,
         }));
         setActiveExam(null); // Return to list view to show result
       }
@@ -359,7 +365,7 @@ const CourseDetailsPage = () => {
                 </div>
                 <div className="divide-y">
                   {exams.map((exam) => {
-                    const result = examResults[exam.id];
+                    const result = examResults[exam.id.toString()];
                     const isTaking = activeExam?.id === exam.id;
 
                     if (isTaking) {
