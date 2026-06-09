@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AlertCircle, Play, BookOpen, FileText } from "lucide-react";
+import {
+  AlertCircle,
+  Play,
+  BookOpen,
+  FileText,
+  CheckCircle,
+  XCircle,
+  RotateCcw,
+  Download,
+} from "lucide-react";
 import { courseService, enrollmentService, examService } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
-import ExamModal from "../components/ExamModal";
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
@@ -15,8 +23,13 @@ const CourseDetailsPage = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [exams, setExams] = useState([]);
-  const [showExamModal, setShowExamModal] = useState(false);
-  const [selectedExam, setSelectedExam] = useState(null);
+
+  // Exam State
+  const [activeExam, setActiveExam] = useState(null);
+  const [examStep, setExamStep] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [examResults, setExamResults] = useState({}); // Stores results by examId
+  const [isSubmittingExam, setIsSubmittingExam] = useState(false);
 
   useEffect(() => {
     fetchCourse();
@@ -30,7 +43,7 @@ const CourseDetailsPage = () => {
       setLoading(true);
       console.info("[COURSE] Loading course details - ID:", id);
       const response = await courseService.getCourseById(id);
-      
+
       if (response.data.success) {
         console.info("[COURSE] Loaded:", response.data.data.title);
         setCourse(response.data.data);
@@ -47,6 +60,20 @@ const CourseDetailsPage = () => {
           }
         } catch (examErr) {
           console.warn("[COURSE] Failed to load exams:", examErr.message);
+        }
+
+        // Fetch user's existing exam attempts/results
+        try {
+          const historyRes = await examService.getUserExamHistory(); // Assuming this endpoint exists or similar
+          if (historyRes.data.success) {
+            const historyMap = {};
+            historyRes.data.data.forEach((attempt) => {
+              historyMap[attempt.examId] = attempt;
+            });
+            setExamResults(historyMap);
+          }
+        } catch (err) {
+          console.warn("[COURSE] Could not load exam history");
         }
       }
     } catch (err) {
@@ -101,6 +128,59 @@ const CourseDetailsPage = () => {
     } finally {
       setEnrolling(false);
     }
+  };
+
+  const handleStartExam = (exam) => {
+    setActiveExam(exam);
+    setExamStep(0);
+    setSelectedAnswers({});
+  };
+
+  const handleSelectAnswer = (questionId, answerIndex) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionId.toString()]: answerIndex,
+    }));
+  };
+
+  const handleSubmitExam = async () => {
+    if (!activeExam) return;
+
+    setIsSubmittingExam(true);
+    try {
+      const response = await examService.submitExam(
+        activeExam.id,
+        selectedAnswers,
+      );
+      if (response.data.success) {
+        setExamResults((prev) => ({
+          ...prev,
+          [activeExam.id]: response.data.data,
+        }));
+        setActiveExam(null); // Return to list view to show result
+      }
+    } catch (err) {
+      console.error("Exam submission error:", err);
+      alert("Failed to submit exam. Please try again.");
+    } finally {
+      setIsSubmittingExam(false);
+    }
+  };
+
+  const handleRetakeExam = (examId) => {
+    const exam = exams.find((e) => e.id === examId);
+    if (exam) {
+      setExamResults((prev) => {
+        const newResults = { ...prev };
+        delete newResults[examId];
+        return newResults;
+      });
+      handleStartExam(exam);
+    }
+  };
+
+  const handleDownloadCertificate = () => {
+    alert("Certificate download started! (Mock feature)");
   };
 
   if (loading) {
@@ -278,56 +358,153 @@ const CourseDetailsPage = () => {
                   </h3>
                 </div>
                 <div className="divide-y">
-                  {exams.map((exam) => (
-                    <div
-                      key={exam.id}
-                      className="p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">
+                  {exams.map((exam) => {
+                    const result = examResults[exam.id];
+                    const isTaking = activeExam?.id === exam.id;
+
+                    if (isTaking) {
+                      const currentQuestion = exam.questions[examStep];
+                      const totalQuestions = exam.questions.length;
+
+                      return (
+                        <div
+                          key={exam.id}
+                          className="p-4 bg-purple-50 border-l-4 border-purple-600"
+                        >
+                          <div className="flex justify-between items-center mb-4">
+                            <span className="text-xs font-bold text-purple-700 uppercase">
+                              Exam Mode
+                            </span>
+                            <span className="text-xs font-medium text-purple-700">
+                              Q {examStep + 1}/{totalQuestions}
+                            </span>
+                          </div>
+
+                          <p className="text-sm font-semibold text-gray-900 mb-4">
+                            {currentQuestion.text || currentQuestion.question}
+                          </p>
+
+                          <div className="space-y-2 mb-4">
+                            {currentQuestion.options.map((option, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() =>
+                                  handleSelectAnswer(currentQuestion.id, idx)
+                                }
+                                className={`w-full p-3 text-left text-sm rounded-lg border transition-all ${
+                                  selectedAnswers[currentQuestion.id] === idx
+                                    ? "border-purple-600 bg-purple-100 font-medium"
+                                    : "border-gray-200 bg-white hover:border-gray-300"
+                                }`}
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-between items-center pt-2">
+                            <button
+                              onClick={() =>
+                                setExamStep((s) => Math.max(0, s - 1))
+                              }
+                              disabled={examStep === 0}
+                              className="text-xs font-bold text-gray-500 disabled:opacity-30"
+                            >
+                              Back
+                            </button>
+                            {examStep < totalQuestions - 1 ? (
+                              <button
+                                onClick={() => setExamStep((s) => s + 1)}
+                                className="px-4 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs"
+                              >
+                                Next
+                              </button>
+                            ) : (
+                              <button
+                                onClick={handleSubmitExam}
+                                disabled={isSubmittingExam}
+                                className="px-4 py-1.5 bg-green-600 text-white rounded-lg font-bold text-xs disabled:opacity-50"
+                              >
+                                {isSubmittingExam ? "..." : "Submit"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (result) {
+                      const passed = result.score >= (exam.passingScore || 70);
+                      return (
+                        <div
+                          key={exam.id}
+                          className={`p-4 ${passed ? "bg-green-50" : "bg-red-50"}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {passed ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <XCircle className="w-5 h-5 text-red-600" />
+                              )}
+                              <p className="font-bold text-gray-900 text-sm">
+                                {exam.title}
+                              </p>
+                            </div>
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded-full ${passed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                            >
+                              {result.score}%
+                            </span>
+                          </div>
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() => handleRetakeExam(exam.id)}
+                              className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                            >
+                              <RotateCcw className="w-3 h-3" /> Retake
+                            </button>
+                            {passed && (
+                              <button
+                                onClick={handleDownloadCertificate}
+                                className="flex items-center gap-1 text-xs font-bold text-green-600 hover:text-green-700"
+                              >
+                                <Download className="w-3 h-3" /> Certificate
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={exam.id}
+                        className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">
                             {exam.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {exam.questions?.length || 0} questions • Passing
-                            score: {exam.passingScore}%
+                          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider font-bold">
+                            Passing: {exam.passingScore}%
                           </p>
                         </div>
                         <button
-                          onClick={() => {
-                            setSelectedExam(exam);
-                            setShowExamModal(true);
-                          }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm"
+                          onClick={() => handleStartExam(exam)}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-xs"
                         >
                           Take Exam
                         </button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Exam Modal */}
-      {showExamModal && selectedExam && (
-        <ExamModal
-          exam={selectedExam}
-          onClose={() => {
-            setShowExamModal(false);
-            setSelectedExam(null);
-          }}
-          onSubmit={() => {
-            setShowExamModal(false);
-            setSelectedExam(null);
-            // Optionally refresh course data
-            fetchCourse();
-          }}
-        />
-      )}
     </div>
   );
 };

@@ -7,6 +7,9 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [answerKey, setAnswerKey] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,6 +48,8 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
       const response = await quizService.submitQuiz(quiz.id, selectedAnswers);
       if (response.data.success) {
         setScore(response.data.data.score);
+        setCorrectCount(response.data.data.correctAnswers);
+        setAnswerKey(response.data.data.answerKey);
         setSubmitted(true);
 
         // Call onSubmit callback
@@ -71,11 +76,15 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
     setSelectedAnswers({});
     setSubmitted(false);
     setScore(null);
+    setAnswerKey(null);
+    setIsReviewing(false);
   };
 
   // Show results screen
-  if (submitted && score !== null) {
+  if (submitted && score !== null && !isReviewing) {
     const passed = score >= 70;
+    const totalAnswered = Object.keys(selectedAnswers).length;
+
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg max-w-md w-full p-8 text-center">
@@ -102,15 +111,23 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <p className="text-4xl font-bold text-blue-600 mb-2">{score}%</p>
             <p className="text-gray-600 text-sm">
-              You got {Math.round((score / 100) * totalQuestions)} out of{" "}
-              {totalQuestions} questions correct
+              Correct: {correctCount} / {totalQuestions}
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Total answered: {totalAnswered} / {totalQuestions}
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => setIsReviewing(true)}
+              className="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg font-semibold hover:bg-blue-200 transition-colors"
+            >
+              Review Answers
+            </button>
             <button
               onClick={handleRetake}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               Retake Quiz
             </button>
@@ -132,7 +149,10 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">{quiz.title}</h2>
+            <h2 className="text-2xl font-bold">
+              {isReviewing ? "Review: " : ""}
+              {quiz.title}
+            </h2>
             <p className="text-blue-100">
               Question {currentQuestion + 1} of {totalQuestions}
             </p>
@@ -167,18 +187,31 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
               <button
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
-                className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswers[question.id?.toString()] === index
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 bg-gray-50"
-                }`}
+                disabled={submitted}
+                className={`w-full p-4 text-left rounded-lg border-2 transition-all 
+                  ${
+                    submitted && answerKey?.[question.id.toString()] === index
+                      ? "border-green-500 bg-green-50"
+                      : submitted &&
+                          selectedAnswers[question.id.toString()] === index &&
+                          answerKey?.[question.id.toString()] !== index
+                        ? "border-red-500 bg-red-50"
+                        : selectedAnswers[question.id.toString()] === index
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedAnswers[question.id?.toString()] === index
-                        ? "border-blue-600 bg-blue-600"
-                        : "border-gray-300"
+                      submitted && answerKey?.[question.id.toString()] === index
+                        ? "border-green-600 bg-green-600"
+                        : submitted &&
+                            selectedAnswers[question.id.toString()] === index
+                          ? "border-red-600 bg-red-600"
+                          : selectedAnswers[question.id.toString()] === index
+                            ? "border-blue-600 bg-blue-600"
+                            : "border-gray-300"
                     }`}
                   >
                     {selectedAnswers[question.id?.toString()] === index && (
@@ -201,7 +234,14 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
               Previous
             </button>
 
-            {!isLastQuestion ? (
+            {isReviewing && isLastQuestion ? (
+              <button
+                onClick={() => setIsReviewing(false)}
+                className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Back to Results
+              </button>
+            ) : !isLastQuestion ? (
               <button
                 onClick={handleNext}
                 className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -233,10 +273,19 @@ const QuizModal = ({ quiz, onClose, onSubmit }) => {
                 onClick={() => setCurrentQuestion(index)}
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentQuestion
-                    ? "bg-blue-600 w-8"
-                    : selectedAnswers[q.id?.toString()] !== undefined
-                      ? "bg-green-600"
-                      : "bg-gray-300"
+                    ? "bg-blue-600 w-8" // Current question
+                    : submitted &&
+                        answerKey?.[q.id.toString()] ===
+                          selectedAnswers[q.id.toString()]
+                      ? "bg-green-600" // Correctly answered
+                      : submitted &&
+                          selectedAnswers[q.id.toString()] !== undefined &&
+                          answerKey?.[q.id.toString()] !==
+                            selectedAnswers[q.id.toString()]
+                        ? "bg-red-600" // Incorrectly answered
+                        : selectedAnswers[q.id.toString()] !== undefined
+                          ? "bg-blue-400" // Answered but not yet reviewed (or just selected)
+                          : "bg-gray-300" // Unanswered
                 }`}
               />
             ))}

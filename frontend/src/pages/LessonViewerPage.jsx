@@ -6,9 +6,16 @@ import {
   ChevronRight,
   AlertCircle,
   BookOpen,
+  CheckCircle,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
-import { courseService, lessonService, quizService } from "../services/api";
-import QuizModal from "../components/QuizModal";
+import {
+  courseService,
+  lessonService,
+  quizService,
+  enrollmentService,
+} from "../services/api";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
@@ -20,8 +27,13 @@ const LessonViewerPage = () => {
   const [error, setError] = useState("");
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [quizzes, setQuizzes] = useState([]);
-  const [showQuizModal, setShowQuizModal] = useState(false);
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
+
+  // Quiz State
+  const [activeQuiz, setActiveQuiz] = useState(null);
+  const [quizStep, setQuizStep] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [quizResults, setQuizResults] = useState({}); // Stores results by quizId
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchLessonData();
@@ -79,6 +91,20 @@ const LessonViewerPage = () => {
       // Find current lesson index
       const index = lessons.findIndex((l) => l.id === parseInt(lessonId));
       setCurrentLessonIndex(index >= 0 ? index : 0);
+
+      // Fetch user's existing quiz attempts/results
+      try {
+        const historyRes = await quizService.getUserQuizHistory(); // Assuming this exists based on schema
+        if (historyRes.data.success) {
+          const historyMap = {};
+          historyRes.data.data.forEach((attempt) => {
+            historyMap[attempt.quizId] = attempt;
+          });
+          setQuizResults(historyMap);
+        }
+      } catch (err) {
+        console.warn("[LESSON] Could not load quiz history");
+      }
     } catch (err) {
       console.error(
         "[LESSON] Failed to load:",
@@ -106,6 +132,56 @@ const LessonViewerPage = () => {
       const nextLesson = allLessons[currentLessonIndex + 1];
       console.info("[LESSON] Navigating to next lesson:", nextLesson.title);
       navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
+    }
+  };
+
+  const handleStartQuiz = (quiz) => {
+    setActiveQuiz(quiz);
+    setQuizStep(0);
+    setSelectedAnswers({});
+  };
+
+  const handleSelectAnswer = (questionId, answerIndex) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionId.toString()]: answerIndex,
+    }));
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!activeQuiz) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await quizService.submitQuiz(
+        activeQuiz.id,
+        selectedAnswers,
+      );
+      if (response.data.success) {
+        setQuizResults((prev) => ({
+          ...prev,
+          [activeQuiz.id]: response.data.data,
+        }));
+        setActiveQuiz(null); // Return to list view which will now show results
+      }
+    } catch (err) {
+      console.error("Quiz submission error:", err);
+      alert("Failed to submit quiz. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRetakeQuiz = (quizId) => {
+    const quiz = quizzes.find((q) => q.id === quizId);
+    if (quiz) {
+      // Clear local result to show quiz again
+      setQuizResults((prev) => {
+        const newResults = { ...prev };
+        delete newResults[quizId];
+        return newResults;
+      });
+      handleStartQuiz(quiz);
     }
   };
 
@@ -226,38 +302,150 @@ const LessonViewerPage = () => {
                     <BookOpen className="w-5 h-5" />
                     Lesson Quizzes
                   </h3>
-                  <div className="space-y-3">
-                    {quizzes.map((quiz) => (
-                      <button
-                        key={quiz.id}
-                        onClick={() => {
-                          setSelectedQuiz(quiz);
-                          setShowQuizModal(true);
-                        }}
-                        className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
+
+                  <div className="space-y-6">
+                    {quizzes.map((quiz) => {
+                      const result = quizResults[quiz.id];
+                      const isTaking = activeQuiz?.id === quiz.id;
+
+                      if (isTaking) {
+                        const currentQuestion = quiz.questions[quizStep];
+                        const totalQuestions = quiz.questions.length;
+
+                        return (
+                          <div
+                            key={quiz.id}
+                            className="bg-blue-50 border border-blue-200 rounded-xl p-6"
+                          >
+                            <div className="flex justify-between items-center mb-6">
+                              <h4 className="font-bold text-blue-900">
+                                {quiz.title}
+                              </h4>
+                              <span className="text-sm font-medium text-blue-700">
+                                Question {quizStep + 1} of {totalQuestions}
+                              </span>
+                            </div>
+
+                            <div className="mb-6">
+                              <p className="text-lg text-gray-900 font-medium mb-4">
+                                {currentQuestion.text ||
+                                  currentQuestion.question}
+                              </p>
+                              <div className="space-y-3">
+                                {currentQuestion.options.map((option, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() =>
+                                      handleSelectAnswer(
+                                        currentQuestion.id,
+                                        idx,
+                                      )
+                                    }
+                                    className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+                                      selectedAnswers[currentQuestion.id] ===
+                                      idx
+                                        ? "border-blue-600 bg-blue-100"
+                                        : "border-gray-200 bg-white hover:border-gray-300"
+                                    }`}
+                                  >
+                                    {option}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <button
+                                onClick={() =>
+                                  setQuizStep((s) => Math.max(0, s - 1))
+                                }
+                                disabled={quizStep === 0}
+                                className="px-4 py-2 text-gray-600 font-semibold disabled:opacity-30"
+                              >
+                                Previous
+                              </button>
+                              {quizStep < totalQuestions - 1 ? (
+                                <button
+                                  onClick={() => setQuizStep((s) => s + 1)}
+                                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold"
+                                >
+                                  Next
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={handleSubmitQuiz}
+                                  disabled={isSubmitting}
+                                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold disabled:opacity-50"
+                                >
+                                  {isSubmitting
+                                    ? "Submitting..."
+                                    : "Submit Quiz"}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (result) {
+                        return (
+                          <div
+                            key={quiz.id}
+                            className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="bg-white p-2 rounded-full">
+                                {result.score >= 70 ? (
+                                  <CheckCircle className="w-6 h-6 text-green-600" />
+                                ) : (
+                                  <XCircle className="w-6 h-6 text-red-600" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900">
+                                  {quiz.title}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Last Score:{" "}
+                                  <span className="font-bold text-blue-600">
+                                    {result.score}%
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleRetakeQuiz(quiz.id)}
+                              className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Retake
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={quiz.id}
+                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
+                        >
                           <div>
                             <p className="font-semibold text-gray-900">
                               {quiz.title}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              {quiz.questions?.length || 0} questions
+                            <p className="text-xs text-gray-500">
+                              {quiz.questions.length} Questions
                             </p>
                           </div>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedQuiz(quiz);
-                              setShowQuizModal(true);
-                            }}
+                            onClick={() => handleStartQuiz(quiz)}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm"
                           >
                             Take Quiz
                           </button>
                         </div>
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -328,23 +516,6 @@ const LessonViewerPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Quiz Modal */}
-      {showQuizModal && selectedQuiz && (
-        <QuizModal
-          quiz={selectedQuiz}
-          onClose={() => {
-            setShowQuizModal(false);
-            setSelectedQuiz(null);
-          }}
-          onSubmit={() => {
-            setShowQuizModal(false);
-            setSelectedQuiz(null);
-            // Optionally refresh lesson data
-            fetchLessonData();
-          }}
-        />
-      )}
     </div>
   );
 };

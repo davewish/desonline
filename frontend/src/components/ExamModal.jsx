@@ -7,6 +7,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(null);
+  const [correctCount, setCorrectCount] = useState(0);
   const [answerKey, setAnswerKey] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,7 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
       const response = await examService.submitExam(exam.id, selectedAnswers);
       if (response.data.success) {
         setScore(response.data.data.score);
+        setCorrectCount(response.data.data.correctAnswers);
         setAnswerKey(response.data.data.answerKey);
         setSubmitted(true);
 
@@ -88,6 +90,8 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
   // Show results screen
   if (submitted && score !== null && !isReviewing) {
     const passed = score >= passingScore;
+    const totalAnswered = Object.keys(selectedAnswers).length;
+
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg max-w-md w-full p-8 text-center">
@@ -114,8 +118,10 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <p className="text-4xl font-bold text-blue-600 mb-2">{score}%</p>
             <p className="text-gray-600 text-sm">
-              You got {Math.round((score / 100) * totalQuestions)} out of{" "}
-              {totalQuestions} questions correct
+              Correct: {correctCount} / {totalQuestions}
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Total answered: {totalAnswered} / {totalQuestions}
             </p>
           </div>
 
@@ -197,13 +203,13 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 disabled={submitted}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all 
                   ${
-                    submitted && answerKey?.[question.id] === index
+                    submitted && answerKey?.[question.id.toString()] === index
                       ? "border-green-500 bg-green-50"
                       : submitted &&
-                          selectedAnswers[question.id] === index &&
-                          answerKey?.[question.id] !== index
+                          selectedAnswers[question.id.toString()] === index &&
+                          answerKey?.[question.id.toString()] !== index
                         ? "border-red-500 bg-red-50"
-                        : selectedAnswers[question.id] === index
+                        : selectedAnswers[question.id.toString()] === index
                           ? "border-purple-600 bg-purple-50"
                           : "border-gray-200 hover:border-gray-300 bg-gray-50"
                   }`}
@@ -211,11 +217,12 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      submitted && answerKey?.[question.id] === index
+                      submitted && answerKey?.[question.id.toString()] === index
                         ? "border-green-600 bg-green-600"
-                        : submitted && selectedAnswers[question.id] === index
+                        : submitted &&
+                            selectedAnswers[question.id.toString()] === index
                           ? "border-red-600 bg-red-600"
-                          : selectedAnswers[question.id] === index
+                          : selectedAnswers[question.id.toString()] === index
                             ? "border-purple-600 bg-purple-600"
                             : "border-gray-300"
                     }`}
@@ -288,9 +295,18 @@ const ExamModal = ({ exam, onClose, onSubmit }) => {
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentQuestion
                     ? "bg-purple-600 w-8"
-                    : selectedAnswers[q.id?.toString()] !== undefined
+                    : submitted &&
+                        answerKey?.[q.id.toString()] ===
+                          selectedAnswers[q.id.toString()]
                       ? "bg-green-600"
-                      : "bg-gray-300"
+                      : submitted &&
+                          selectedAnswers[q.id.toString()] !== undefined &&
+                          answerKey?.[q.id.toString()] !==
+                            selectedAnswers[q.id.toString()]
+                        ? "bg-red-600"
+                        : selectedAnswers[q.id.toString()] !== undefined
+                          ? "bg-purple-400"
+                          : "bg-gray-300"
                 }`}
               />
             ))}
