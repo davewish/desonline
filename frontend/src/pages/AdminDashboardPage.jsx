@@ -8,8 +8,17 @@ import {
   X,
   Download,
   Play,
+  Plus,
+  Minus,
+  BookOpen,
+  FileText,
 } from "lucide-react";
-import { courseService, lessonService } from "../services/api";
+import {
+  courseService,
+  lessonService,
+  quizService,
+  examService,
+} from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
 const AdminDashboardPage = () => {
@@ -18,8 +27,11 @@ const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("courses");
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
+  const [showQuizForm, setShowQuizForm] = useState(false);
+  const [showExamForm, setShowExamForm] = useState(false);
   const [adminCourses, setAdminCourses] = useState([]);
   const [adminLessons, setAdminLessons] = useState([]);
+  const [adminQuizzes, setAdminQuizzes] = useState([]); // Not currently used for display, but good to have
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
@@ -32,6 +44,19 @@ const AdminDashboardPage = () => {
     video: null,
     pdf: null,
   });
+  const [quizData, setQuizData] = useState({
+    lessonId: "",
+    title: "",
+    description: "",
+    questions: [{ text: "", options: ["", "", "", ""], correctAnswer: 0 }],
+  });
+  const [examData, setExamData] = useState({
+    courseId: "",
+    title: "",
+    description: "",
+    passingScore: 70,
+    questions: [{ text: "", options: ["", "", "", ""], correctAnswer: 0 }],
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,15 +64,22 @@ const AdminDashboardPage = () => {
   const [selectedPdf, setSelectedPdf] = useState(null);
 
   useEffect(() => {
-    fetchAdminCourses();
+    fetchAdminData();
   }, []);
 
-  const fetchAdminCourses = async () => {
+  const fetchAdminData = async () => {
     try {
-      const response = await courseService.getAdminCourses();
-      if (response.data.success && Array.isArray(response.data.data)) {
-        console.info("[ADMIN] Loaded", response.data.data.length, "courses");
-        setAdminCourses(response.data.data);
+      const coursesResponse = await courseService.getAdminCourses();
+      if (
+        coursesResponse.data.success &&
+        Array.isArray(coursesResponse.data.data)
+      ) {
+        console.info(
+          "[ADMIN] Loaded",
+          coursesResponse.data.data.length,
+          "courses",
+        );
+        setAdminCourses(coursesResponse.data.data);
       } else {
         setAdminCourses([]);
       }
@@ -75,6 +107,12 @@ const AdminDashboardPage = () => {
       console.error("Failed to fetch lessons:", err);
       setAdminLessons([]);
     }
+
+    // Placeholder for fetching all quizzes/exams if needed for a list view
+    // For now, we'll rely on the creation forms.
+    try {
+      // const quizzesResponse = await quizService.getAllQuizzes(); // Assuming such an endpoint exists
+    } catch (err) {}
   };
 
   if (!isAdmin) {
@@ -168,6 +206,166 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleQuizSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (
+      !quizData.lessonId ||
+      !quizData.title ||
+      quizData.questions.some((q) => !q.text || q.options.some((opt) => !opt))
+    ) {
+      setError(
+        "Please fill out all quiz fields, including questions and options.",
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.info("[ADMIN] Creating quiz:", quizData.title);
+      const response = await quizService.createQuiz(quizData);
+      if (response.data.success) {
+        setSuccess("Quiz created successfully!");
+        setQuizData({
+          lessonId: "",
+          title: "",
+          description: "",
+          questions: [
+            { text: "", options: ["", "", "", ""], correctAnswer: 0 },
+          ],
+        });
+        setShowQuizForm(false);
+        fetchAdminData(); // Refresh data to potentially update lesson lists
+      }
+    } catch (err) {
+      console.error(
+        "[ADMIN] Failed to create quiz:",
+        err.response?.data?.message,
+      );
+      setError(err.response?.data?.message || "Failed to create quiz");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExamSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (
+      !examData.courseId ||
+      !examData.title ||
+      examData.questions.some((q) => !q.text || q.options.some((opt) => !opt))
+    ) {
+      setError(
+        "Please fill out all exam fields, including questions and options.",
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.info("[ADMIN] Creating exam:", examData.title);
+      const response = await examService.createExam(examData);
+      if (response.data.success) {
+        setSuccess("Exam created successfully!");
+        setExamData({
+          courseId: "",
+          title: "",
+          description: "",
+          passingScore: 70,
+          questions: [
+            { text: "", options: ["", "", "", ""], correctAnswer: 0 },
+          ],
+        });
+        setShowExamForm(false);
+        fetchAdminData(); // Refresh data to potentially update course lists
+      }
+    } catch (err) {
+      console.error(
+        "[ADMIN] Failed to create exam:",
+        err.response?.data?.message,
+      );
+      setError(err.response?.data?.message || "Failed to create exam");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addQuestion = (type) => {
+    const newQuestion = {
+      text: "",
+      options: ["", "", "", ""],
+      correctAnswer: 0,
+    };
+    if (type === "quiz") {
+      setQuizData((prev) => ({
+        ...prev,
+        questions: [...prev.questions, newQuestion],
+      }));
+    } else if (type === "exam") {
+      setExamData((prev) => ({
+        ...prev,
+        questions: [...prev.questions, newQuestion],
+      }));
+    }
+  };
+
+  const removeQuestion = (type, index) => {
+    if (type === "quiz") {
+      const newQuestions = quizData.questions.filter((_, i) => i !== index);
+      setQuizData((prev) => ({ ...prev, questions: newQuestions }));
+    } else if (type === "exam") {
+      const newQuestions = examData.questions.filter((_, i) => i !== index);
+      setExamData((prev) => ({ ...prev, questions: newQuestions }));
+    }
+  };
+
+  const updateQuestion = (type, qIndex, field, value) => {
+    if (type === "quiz") {
+      setQuizData((prev) => ({
+        ...prev,
+        questions: prev.questions.map((q, i) =>
+          i === qIndex ? { ...q, [field]: value } : q,
+        ),
+      }));
+    } else if (type === "exam") {
+      setExamData((prev) => ({
+        ...prev,
+        questions: prev.questions.map((q, i) =>
+          i === qIndex ? { ...q, [field]: value } : q,
+        ),
+      }));
+    }
+  };
+
+  const updateOption = (type, qIndex, oIndex, value) => {
+    const updateQuestionsList = (questions) =>
+      questions.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              options: q.options.map((opt, j) => (j === oIndex ? value : opt)),
+            }
+          : q,
+      );
+
+    if (type === "quiz") {
+      setQuizData((prev) => ({
+        ...prev,
+        questions: updateQuestionsList(prev.questions),
+      }));
+    } else if (type === "exam") {
+      setExamData((prev) => ({
+        ...prev,
+        questions: updateQuestionsList(prev.questions),
+      }));
+    }
+  };
+
   const handleViewVideo = (videoUrl, title) => {
     setSelectedVideo({ url: videoUrl, title });
   };
@@ -218,6 +416,26 @@ const AdminDashboardPage = () => {
           >
             Manage Lessons
           </button>
+          <button
+            onClick={() => setActiveTab("quizzes")}
+            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
+              activeTab === "quizzes"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Manage Quizzes
+          </button>
+          <button
+            onClick={() => setActiveTab("exams")}
+            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
+              activeTab === "exams"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Manage Exams
+          </button>
         </div>
       </div>
 
@@ -252,6 +470,7 @@ const AdminDashboardPage = () => {
             </div>
 
             {showCourseForm && (
+              // Course Creation Form
               <div className="bg-white rounded-lg shadow p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   Create New Course
@@ -319,6 +538,7 @@ const AdminDashboardPage = () => {
             )}
 
             {/* Courses List */}
+            {/* Courses List */}
             <div>
               <h3 className="text-xl font-bold text-gray-900 mb-6">
                 Your Courses
@@ -378,6 +598,416 @@ const AdminDashboardPage = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "quizzes" && (
+          <div>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Manage Quizzes
+              </h2>
+              <button
+                onClick={() => setShowQuizForm(!showQuizForm)}
+                className="btn-primary"
+              >
+                {showQuizForm ? "Cancel" : "Create Quiz"}
+              </button>
+            </div>
+
+            {showQuizForm && (
+              // Quiz Creation Form
+              <div className="bg-white rounded-lg shadow p-8 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">
+                  Create New Quiz
+                </h3>
+                <form onSubmit={handleQuizSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">
+                        Lesson
+                      </label>
+                      <select
+                        value={quizData.lessonId}
+                        onChange={(e) =>
+                          setQuizData({ ...quizData, lessonId: e.target.value })
+                        }
+                        className="input"
+                      >
+                        <option value="">Select a lesson</option>
+                        {adminLessons.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.title} (Course:{" "}
+                            {
+                              adminCourses.find((c) => c.id === l.courseId)
+                                ?.title
+                            }
+                            )
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">
+                        Quiz Title
+                      </label>
+                      <input
+                        type="text"
+                        value={quizData.title}
+                        onChange={(e) =>
+                          setQuizData({ ...quizData, title: e.target.value })
+                        }
+                        className="input"
+                        placeholder="e.g., Module 1 Mastery Quiz"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={quizData.description}
+                      onChange={(e) =>
+                        setQuizData({
+                          ...quizData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="input"
+                      placeholder="Brief description of the quiz"
+                      rows="2"
+                    />
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="font-bold text-gray-800 border-b pb-2">
+                      Questions
+                    </h4>
+                    {quizData.questions.map((q, qIndex) => (
+                      <div
+                        key={qIndex}
+                        className="p-4 border border-gray-200 rounded-lg bg-gray-50 relative"
+                      >
+                        {quizData.questions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeQuestion("quiz", qIndex)}
+                            className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="mb-4">
+                          <label className="block text-sm font-bold text-gray-600 mb-1">
+                            Question {qIndex + 1}
+                          </label>
+                          <input
+                            type="text"
+                            value={q.text}
+                            onChange={(e) =>
+                              updateQuestion(
+                                "quiz",
+                                qIndex,
+                                "text",
+                                e.target.value,
+                              )
+                            }
+                            className="input text-sm"
+                            placeholder="Enter the question text"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {q.options.map((opt, oIndex) => (
+                            <div key={oIndex} className="space-y-1">
+                              <div className="flex items-center justify-between px-1">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase">
+                                  Option {oIndex + 1}
+                                </label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="radio"
+                                    id={`quiz-q${qIndex}-opt${oIndex}`}
+                                    name={`correct-quiz-${qIndex}`}
+                                    checked={q.correctAnswer === oIndex}
+                                    onChange={() =>
+                                      updateQuestion(
+                                        "quiz",
+                                        qIndex,
+                                        "correctAnswer",
+                                        oIndex,
+                                      )
+                                    }
+                                    className="w-3 h-3 text-blue-600 cursor-pointer"
+                                  />
+                                  <label
+                                    htmlFor={`quiz-q${qIndex}-opt${oIndex}`}
+                                    className={`text-[10px] font-bold cursor-pointer transition-colors ${q.correctAnswer === oIndex ? "text-green-600" : "text-gray-400 hover:text-gray-600"}`}
+                                  >
+                                    {q.correctAnswer === oIndex
+                                      ? "CORRECT"
+                                      : "SET AS CORRECT"}
+                                  </label>
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={(e) =>
+                                  updateOption(
+                                    "quiz",
+                                    qIndex,
+                                    oIndex,
+                                    e.target.value,
+                                  )
+                                }
+                                className="input text-sm py-1.5"
+                                placeholder={`Option ${oIndex + 1}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addQuestion("quiz")}
+                      className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:text-blue-700 mt-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Question
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary w-full disabled:opacity-50"
+                  >
+                    {loading ? "Creating..." : "Create Quiz"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+              <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p>Quizzes are associated with individual lessons.</p>
+              <p className="text-sm">
+                Created quizzes will appear for students within the Lesson
+                Viewer.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "exams" && (
+          <div>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">Manage Exams</h2>
+              <button
+                onClick={() => setShowExamForm(!showExamForm)}
+                className="btn-primary"
+              >
+                {showExamForm ? "Cancel" : "Create Exam"}
+              </button>
+            </div>
+
+            {showExamForm && (
+              // Exam Creation Form
+              <div className="bg-white rounded-lg shadow p-8 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">
+                  Create New Exam
+                </h3>
+                <form onSubmit={handleExamSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">
+                        Course
+                      </label>
+                      <select
+                        value={examData.courseId}
+                        onChange={(e) =>
+                          setExamData({ ...examData, courseId: e.target.value })
+                        }
+                        className="input"
+                      >
+                        <option value="">Select a course</option>
+                        {adminCourses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">
+                        Exam Title
+                      </label>
+                      <input
+                        type="text"
+                        value={examData.title}
+                        onChange={(e) =>
+                          setExamData({ ...examData, title: e.target.value })
+                        }
+                        className="input"
+                        placeholder="e.g., Final React Exam"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={examData.description}
+                      onChange={(e) =>
+                        setExamData({
+                          ...examData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="input"
+                      placeholder="Brief description of the exam"
+                      rows="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Passing Score (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={examData.passingScore}
+                      onChange={(e) =>
+                        setExamData({
+                          ...examData,
+                          passingScore: parseInt(e.target.value),
+                        })
+                      }
+                      className="input"
+                      placeholder="e.g., 70"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="font-bold text-gray-800 border-b pb-2">
+                      Questions
+                    </h4>
+                    {examData.questions.map((q, qIndex) => (
+                      <div
+                        key={qIndex}
+                        className="p-4 border border-gray-200 rounded-lg bg-gray-50 relative"
+                      >
+                        {examData.questions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeQuestion("exam", qIndex)}
+                            className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="mb-4">
+                          <label className="block text-sm font-bold text-gray-600 mb-1">
+                            Question {qIndex + 1}
+                          </label>
+                          <input
+                            type="text"
+                            value={q.text}
+                            onChange={(e) =>
+                              updateQuestion(
+                                "exam",
+                                qIndex,
+                                "text",
+                                e.target.value,
+                              )
+                            }
+                            className="input text-sm"
+                            placeholder="Enter the question text"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {q.options.map((opt, oIndex) => (
+                            <div key={oIndex} className="space-y-1">
+                              <div className="flex items-center justify-between px-1">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase">
+                                  Option {oIndex + 1}
+                                </label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="radio"
+                                    id={`exam-q${qIndex}-opt${oIndex}`}
+                                    name={`correct-exam-${qIndex}`}
+                                    checked={q.correctAnswer === oIndex}
+                                    onChange={() =>
+                                      updateQuestion(
+                                        "exam",
+                                        qIndex,
+                                        "correctAnswer",
+                                        oIndex,
+                                      )
+                                    }
+                                    className="w-3 h-3 text-purple-600 cursor-pointer"
+                                  />
+                                  <label
+                                    htmlFor={`exam-q${qIndex}-opt${oIndex}`}
+                                    className={`text-[10px] font-bold cursor-pointer transition-colors ${q.correctAnswer === oIndex ? "text-green-600" : "text-gray-400 hover:text-gray-600"}`}
+                                  >
+                                    {q.correctAnswer === oIndex
+                                      ? "CORRECT"
+                                      : "SET AS CORRECT"}
+                                  </label>
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={(e) =>
+                                  updateOption(
+                                    "exam",
+                                    qIndex,
+                                    oIndex,
+                                    e.target.value,
+                                  )
+                                }
+                                className="input text-sm py-1.5"
+                                placeholder={`Option ${oIndex + 1}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addQuestion("exam")}
+                      className="flex items-center gap-2 text-purple-600 font-bold text-sm hover:text-purple-700 mt-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Question
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary w-full disabled:opacity-50"
+                  >
+                    {loading ? "Creating..." : "Create Exam"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+              <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p>Exams are associated with entire courses.</p>
+              <p className="text-sm">
+                Created exams will appear for students within the Course Details
+                page.
+              </p>
             </div>
           </div>
         )}
