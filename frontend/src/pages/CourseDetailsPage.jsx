@@ -373,6 +373,9 @@ const CourseDetailsPage = () => {
                     if (isTaking) {
                       const currentQuestion = exam.questions[examStep];
                       const totalQuestions = exam.questions.length;
+                      const isAnswered =
+                        selectedAnswers[currentQuestion.id.toString()] !==
+                        undefined;
 
                       return (
                         <div
@@ -423,15 +426,24 @@ const CourseDetailsPage = () => {
                             {examStep < totalQuestions - 1 ? (
                               <button
                                 onClick={() => setExamStep((s) => s + 1)}
-                                className="px-4 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs"
+                                disabled={!isAnswered}
+                                className={`px-4 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                                  isAnswered
+                                    ? "bg-purple-600 text-white hover:bg-purple-700"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
                               >
                                 Next
                               </button>
                             ) : (
                               <button
                                 onClick={handleSubmitExam}
-                                disabled={isSubmittingExam}
-                                className="px-4 py-1.5 bg-green-600 text-white rounded-lg font-bold text-xs disabled:opacity-50"
+                                disabled={isSubmittingExam || !isAnswered}
+                                className={`px-4 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                                  !isSubmittingExam && isAnswered
+                                    ? "bg-green-600 text-white hover:bg-green-700"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
                               >
                                 {isSubmittingExam ? "..." : "Submit"}
                               </button>

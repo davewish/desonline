@@ -320,6 +320,9 @@ const LessonViewerPage = () => {
                       if (isTaking) {
                         const currentQuestion = quiz.questions[quizStep];
                         const totalQuestions = quiz.questions.length;
+                        const isAnswered =
+                          selectedAnswers[currentQuestion.id.toString()] !==
+                          undefined;
 
                         return (
                           <div
@@ -376,15 +379,24 @@ const LessonViewerPage = () => {
                               {quizStep < totalQuestions - 1 ? (
                                 <button
                                   onClick={() => setQuizStep((s) => s + 1)}
-                                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold"
+                                  disabled={!isAnswered}
+                                  className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                                    isAnswered
+                                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                  }`}
                                 >
                                   Next
                                 </button>
                               ) : (
                                 <button
                                   onClick={handleSubmitQuiz}
-                                  disabled={isSubmitting}
-                                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold disabled:opacity-50"
+                                  disabled={isSubmitting || !isAnswered}
+                                  className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                                    !isSubmitting && isAnswered
+                                      ? "bg-green-600 text-white hover:bg-green-700"
+                                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                  }`}
                                 >
                                   {isSubmitting
                                     ? "Submitting..."
