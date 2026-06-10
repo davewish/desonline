@@ -97,7 +97,11 @@ export const lessonService = {
     formData.append("courseId", data.courseId);
     formData.append("title", data.title);
     formData.append("position", data.position || 0);
-    if (data.video) formData.append("video", data.video);
+    if (data.videoType === "youtube") {
+      formData.append("videoUrl", data.videoUrl);
+    } else if (data.video) {
+      formData.append("video", data.video);
+    }
     if (data.pdf) formData.append("pdf", data.pdf);
     return api.post("/lessons", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -107,7 +111,11 @@ export const lessonService = {
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("position", data.position);
-    if (data.video) formData.append("video", data.video);
+    if (data.videoType === "youtube") {
+      formData.append("videoUrl", data.videoUrl);
+    } else if (data.video) {
+      formData.append("video", data.video);
+    }
     if (data.pdf) formData.append("pdf", data.pdf);
     return api.put(`/lessons/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },

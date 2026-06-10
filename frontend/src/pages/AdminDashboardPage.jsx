@@ -41,6 +41,8 @@ const AdminDashboardPage = () => {
     courseId: "",
     title: "",
     position: 0,
+    videoType: "youtube",
+    videoUrl: "",
     video: null,
     pdf: null,
   });
@@ -170,8 +172,13 @@ const AdminDashboardPage = () => {
     setError("");
     setSuccess("");
 
-    if (!lessonData.courseId || !lessonData.title || !lessonData.video) {
-      setError("Course, title, and video are required");
+    const hasVideo =
+      lessonData.videoType === "youtube"
+        ? lessonData.videoUrl
+        : lessonData.video;
+
+    if (!lessonData.courseId || !lessonData.title || !hasVideo) {
+      setError("Course, title, and video source are required");
       return;
     }
 
@@ -183,13 +190,15 @@ const AdminDashboardPage = () => {
         "for course:",
         lessonData.courseId,
       );
-      await lessonService.createLesson(lessonData);
+      const response = await lessonService.createLesson(lessonData);
       console.info("[ADMIN] Lesson created successfully:", lessonData.title);
       setSuccess(response.data.message || "Lesson saved successfully!");
       setLessonData({
         courseId: "",
         title: "",
         position: 0,
+        videoType: "youtube",
+        videoUrl: "",
         video: null,
         pdf: null,
       });
@@ -1139,19 +1148,63 @@ const AdminDashboardPage = () => {
 
                   <div>
                     <label className="block text-gray-700 font-semibold mb-2">
-                      Video File
+                      Video Source
                     </label>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) =>
-                        setLessonData({
-                          ...lessonData,
-                          video: e.target.files[0],
-                        })
-                      }
-                      className="input"
-                    />
+                    <div className="flex gap-4 mb-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLessonData({ ...lessonData, videoType: "youtube" })
+                        }
+                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-semibold transition-all ${
+                          lessonData.videoType === "youtube"
+                            ? "border-blue-600 bg-blue-50 text-blue-600"
+                            : "border-gray-200 text-gray-500"
+                        }`}
+                      >
+                        YouTube URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLessonData({ ...lessonData, videoType: "file" })
+                        }
+                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-semibold transition-all ${
+                          lessonData.videoType === "file"
+                            ? "border-blue-600 bg-blue-50 text-blue-600"
+                            : "border-gray-200 text-gray-500"
+                        }`}
+                      >
+                        Upload File
+                      </button>
+                    </div>
+
+                    {lessonData.videoType === "youtube" ? (
+                      <input
+                        type="text"
+                        value={lessonData.videoUrl}
+                        onChange={(e) =>
+                          setLessonData({
+                            ...lessonData,
+                            videoUrl: e.target.value,
+                          })
+                        }
+                        className="input"
+                        placeholder="Paste YouTube video URL here..."
+                      />
+                    ) : (
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) =>
+                          setLessonData({
+                            ...lessonData,
+                            video: e.target.files[0],
+                          })
+                        }
+                        className="input"
+                      />
+                    )}
                   </div>
 
                   <div>

@@ -5,18 +5,30 @@ import bcrypt from "bcryptjs";
 async function main() {
   console.log("🌱 Running production-safe seed...");
   console.log("🌱 Cleaning up content and verifying users...");
+  const isProduction = process.env.NODE_ENV === "production";
 
-  // Clear content data to start fresh
-  // Order matters due to foreign key constraints
-  await prisma.userExam.deleteMany({});
-  await prisma.userQuiz.deleteMany({});
-  await prisma.question.deleteMany({});
-  await prisma.exam.deleteMany({});
-  await prisma.quiz.deleteMany({});
-  await prisma.enrollment.deleteMany({});
-  await prisma.lesson.deleteMany({});
-  await prisma.course.deleteMany({});
-  await prisma.user.deleteMany({}); // Delete all users to ensure only the specified ones remain
+  console.log(
+    `🌱 Running seed in ${process.env.NODE_ENV || "development"} mode...`,
+  );
+
+  if (!isProduction) {
+    console.log("🧹 Development mode detected: Cleaning up content data...");
+    // Order matters due to foreign key constraints
+    await prisma.userExam.deleteMany({});
+    await prisma.userQuiz.deleteMany({});
+    await prisma.question.deleteMany({});
+    await prisma.exam.deleteMany({});
+    await prisma.quiz.deleteMany({});
+    await prisma.enrollment.deleteMany({});
+    await prisma.lesson.deleteMany({});
+    await prisma.course.deleteMany({});
+    await prisma.user.deleteMany({});
+    console.log("✅ Database cleared.");
+  } else {
+    console.log(
+      "🛡️ Production mode detected: Skipping data wipe. Verifying essential users only.",
+    );
+  }
 
   // Define essential users
   const adminPassword = await bcrypt.hash("admin123", 10);
