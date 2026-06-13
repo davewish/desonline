@@ -121,7 +121,7 @@ export const createLesson = async (req, res) => {
         title,
         videoUrl,
         pdfUrl,
-        position: position || 0,
+        position: parseInt(position) || 0,
       },
     });
 
@@ -186,7 +186,7 @@ export const updateLesson = async (req, res) => {
         title: title || lesson.title,
         videoUrl,
         pdfUrl,
-        position: position !== undefined ? position : lesson.position,
+        position: position !== undefined ? parseInt(position) : lesson.position,
       },
     });
 
