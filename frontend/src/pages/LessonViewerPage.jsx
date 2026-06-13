@@ -16,8 +16,8 @@ import {
   quizService,
   enrollmentService,
 } from "../services/api";
-import { useAuth } from "../hooks/useAuth";
 import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
+import { useAuth } from "../hooks/useAuth";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
@@ -57,6 +57,7 @@ const LessonViewerPage = () => {
             setQuizResults(historyMap);
           }
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.warn("[LESSON] Could not load quiz history:", err.message);
         }
       }
@@ -68,6 +69,7 @@ const LessonViewerPage = () => {
     setLoading(true);
     try {
       console.info("[LESSON] Loading - Course:", courseId, "Lesson:", lessonId);
+      // eslint-disable-next-line no-console
       // Get course data from API
       const courseRes = await courseService.getCourseById(courseId);
       if (!courseRes.data.success) {
@@ -79,6 +81,7 @@ const LessonViewerPage = () => {
 
       const courseData = courseRes.data.data;
       setCourse(courseData);
+      // eslint-disable-next-line no-console
       console.info("[LESSON] Course loaded:", courseData.title);
 
       // Get lesson data from API
@@ -92,6 +95,7 @@ const LessonViewerPage = () => {
 
       const lessonData = lessonRes.data.data;
       setLesson(lessonData);
+      // eslint-disable-next-line no-console
       console.info("[LESSON] Lesson loaded:", lessonData.title);
 
       const lessons = courseData.lessons || []; // Use lessons from course data already fetched
@@ -103,9 +107,11 @@ const LessonViewerPage = () => {
         if (quizzesRes.data.success) {
           setQuizzes(quizzesRes.data.data || []);
           console.info(
+            // eslint-disable-next-line no-console
             "[LESSON] Quizzes loaded:",
             quizzesRes.data.data?.length || 0,
           );
+          // eslint-disable-next-line no-console
           console.info("[LESSON] Quizzes loaded:", quizzesRes.data.data);
         }
       } catch (quizErr) {
@@ -116,6 +122,7 @@ const LessonViewerPage = () => {
       setCurrentLessonIndex(index >= 0 ? index : 0);
     } catch (err) {
       console.error(
+        // eslint-disable-next-line no-console
         "[LESSON] Failed to load:",
         err.response?.data?.message || err.message,
       );
@@ -129,6 +136,7 @@ const LessonViewerPage = () => {
     if (currentLessonIndex > 0) {
       const previousLesson = allLessons[currentLessonIndex - 1];
       console.info(
+        // eslint-disable-next-line no-console
         "[LESSON] Navigating to previous lesson:",
         previousLesson.title,
       );
@@ -139,6 +147,7 @@ const LessonViewerPage = () => {
   const handleNextLesson = () => {
     if (currentLessonIndex < allLessons.length - 1) {
       const nextLesson = allLessons[currentLessonIndex + 1];
+      // eslint-disable-next-line no-console
       console.info("[LESSON] Navigating to next lesson:", nextLesson.title);
       navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
     }
@@ -174,6 +183,7 @@ const LessonViewerPage = () => {
         setActiveQuiz(null); // Return to list view which will now show results
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Quiz submission error:", err);
       alert("Failed to submit quiz. Please try again.");
     } finally {

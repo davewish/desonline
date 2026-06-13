@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Play, BookOpen, BarChart3, LogOut } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { courseService, enrollmentService } from "../services/api";
+import { getMediaUrl } from "../utils/mediaUtils";
 
 const UserDashboardPage = () => {
   const navigate = useNavigate();
@@ -11,14 +12,6 @@ const UserDashboardPage = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
-
-  const getMediaUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const baseUrl = apiUrl.split("/api")[0];
-    return `${baseUrl}${url}`;
-  };
 
   useEffect(() => {
     fetchUserData();

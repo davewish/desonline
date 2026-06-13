@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Download,
 } from "lucide-react";
+import { getMediaUrl } from "../utils/mediaUtils";
 import { courseService, enrollmentService, examService } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
@@ -30,14 +31,6 @@ const CourseDetailsPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [examResults, setExamResults] = useState({}); // Stores results by examId
   const [isSubmittingExam, setIsSubmittingExam] = useState(false);
-
-  const getMediaUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const baseUrl = apiUrl.split("/api")[0];
-    return `${baseUrl}${url}`;
-  };
 
   useEffect(() => {
     fetchCourse();

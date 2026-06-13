@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, AlertCircle } from "lucide-react";
 import { courseService } from "../services/api";
+import { getMediaUrl } from "../utils/mediaUtils";
 
 const CoursesPage = () => {
   const navigate = useNavigate();
@@ -11,14 +12,6 @@ const CoursesPage = () => {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
-
-  const getMediaUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const baseUrl = apiUrl.split("/api")[0];
-    return `${baseUrl}${url}`;
-  };
 
   useEffect(() => {
     fetchCourses();

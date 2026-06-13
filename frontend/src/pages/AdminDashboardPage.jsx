@@ -13,6 +13,7 @@ import {
   BookOpen,
   FileText,
 } from "lucide-react";
+import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 import {
   courseService,
   lessonService,
@@ -20,7 +21,6 @@ import {
   examService,
 } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
-import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
