@@ -20,6 +20,7 @@ import {
   examService,
 } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
@@ -1565,7 +1566,7 @@ const AdminDashboardPage = () => {
                 <iframe
                   width="100%"
                   height="100%"
-                  src={selectedVideo.url}
+                  src={getYouTubeEmbedUrl(selectedVideo.url)}
                   title={selectedVideo.title}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

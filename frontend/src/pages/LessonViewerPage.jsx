@@ -17,6 +17,7 @@ import {
   enrollmentService,
 } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 
 const LessonViewerPage = () => {
   const { courseId, lessonId } = useParams();
@@ -40,14 +41,6 @@ const LessonViewerPage = () => {
   useEffect(() => {
     fetchLessonData();
   }, [lessonId, courseId]);
-
-  const getMediaUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const baseUrl = apiUrl.split("/api")[0];
-    return `${baseUrl}${url}`;
-  };
 
   // Dedicated effect to load quiz history whenever authentication state changes
   useEffect(() => {
@@ -266,7 +259,7 @@ const LessonViewerPage = () => {
                   <iframe
                     width="100%"
                     height="100%"
-                    src={lesson.videoUrl}
+                    src={getYouTubeEmbedUrl(lesson.videoUrl)}
                     title={lesson.title}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
