@@ -12,6 +12,14 @@ const UserDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const baseUrl = apiUrl.split("/api")[0];
+    return `${baseUrl}${url}`;
+  };
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -228,7 +236,7 @@ const UserDashboardPage = () => {
                         <div className="flex flex-col md:flex-row items-start gap-3 md:gap-6 p-4 md:p-6">
                           {enrollment.course?.thumbnail && (
                             <img
-                              src={enrollment.course.thumbnail}
+                              src={getMediaUrl(enrollment.course.thumbnail)}
                               alt={enrollment.course.title}
                               className="w-full md:w-40 h-32 md:h-24 object-cover rounded-lg flex-shrink-0"
                             />
@@ -299,7 +307,7 @@ const UserDashboardPage = () => {
                         >
                           {course.thumbnail && (
                             <img
-                              src={course.thumbnail}
+                              src={getMediaUrl(course.thumbnail)}
                               alt={course.title}
                               className="w-full h-40 object-cover"
                             />

@@ -12,6 +12,14 @@ const CoursesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
 
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const baseUrl = apiUrl.split("/api")[0];
+    return `${baseUrl}${url}`;
+  };
+
   useEffect(() => {
     fetchCourses();
   }, [search, currentPage]);
@@ -110,7 +118,7 @@ const CoursesPage = () => {
                 >
                   {course.thumbnail && (
                     <img
-                      src={course.thumbnail}
+                      src={getMediaUrl(course.thumbnail)}
                       alt={course.title}
                       className="w-full h-40 object-cover"
                     />

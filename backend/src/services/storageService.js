@@ -26,16 +26,26 @@ class LocalStorageProvider extends StorageProvider {
     if (!file || !file.filename) {
       throw new Error("No file provided for local storage upload.");
     }
-    // Multer already saved the file to its destination.
-    // We return the URL that the frontend will use to access it.
-    // Assuming Multer saves video files to `uploads/videos`
-    return `/uploads/videos/${file.filename}`;
+
+    // Determine the folder based on Multer's destination (e.g., 'thumbnails', 'videos', 'pdfs')
+    const folder = file.destination
+      ? path.basename(file.destination)
+      : "videos";
+    return `/uploads/${folder}/${file.filename}`;
   }
 
   async delete(fileUrl) {
-    if (!fileUrl || !fileUrl.startsWith("/uploads/videos/")) {
+    if (!fileUrl) return;
+
+    // Allow deletion from any of our recognized local upload folders
+    const isLocal =
+      fileUrl.startsWith("/uploads/videos/") ||
+      fileUrl.startsWith("/uploads/thumbnails/") ||
+      fileUrl.startsWith("/uploads/pdfs/");
+
+    if (!isLocal) {
       console.warn(
-        `Attempted to delete non-local video file or invalid URL: ${fileUrl}`,
+        `Attempted to delete non-local file or invalid URL: ${fileUrl}`,
       );
       return;
     }
@@ -47,15 +57,15 @@ class LocalStorageProvider extends StorageProvider {
     try {
       await fs.access(filePath); // Check if file exists
       await fs.unlink(filePath); // Delete the file
-      console.log(`Deleted local video file: ${filePath}`);
+      console.log(`Deleted local file: ${filePath}`);
     } catch (error) {
       if (error.code === "ENOENT") {
         console.warn(
-          `Attempted to delete non-existent local video file: ${filePath}`,
+          `Attempted to delete non-existent local file: ${filePath}`,
         );
       } else {
-        console.error(`Error deleting local video file ${filePath}:`, error);
-        throw new Error(`Failed to delete local video file: ${error.message}`);
+        console.error(`Error deleting local file ${filePath}:`, error);
+        throw new Error(`Failed to delete local file: ${error.message}`);
       }
     }
   }
@@ -112,11 +122,36 @@ const getStorageProvider = () => {
   }
 };
 
-const provider = getStorageProvider();
+const mainProvider = getStorageProvider();
+const localProvider = new LocalStorageProvider();
+
+/**
+ * Smart handler to route files to local storage and strings to the selected provider.
+ * This prevents the "Failed to create" error when uploading thumbnails in YOUTUBE mode.
+ */
+const handleUpload = async (input) => {
+  // If it's a Multer file object, use LocalStorage regardless of main provider
+  if (
+    input &&
+    typeof input === "object" &&
+    (input.fieldname || input.filename)
+  ) {
+    return localProvider.upload(input);
+  }
+  return mainProvider.upload(input);
+};
 
 export const storageService = {
-  saveVideo: async (input) => provider.upload(input),
-  deleteVideo: async (url) => provider.delete(url),
+  saveFile: handleUpload,
+  saveVideo: handleUpload,
+  deleteFile: async (url) => {
+    await localProvider.delete(url);
+    await mainProvider.delete(url);
+  },
+  deleteVideo: async (url) => {
+    await localProvider.delete(url);
+    await mainProvider.delete(url);
+  },
 };
 
 export default storageService;

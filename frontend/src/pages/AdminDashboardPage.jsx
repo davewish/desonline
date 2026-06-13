@@ -62,6 +62,8 @@ const AdminDashboardPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingCourseId, setEditingCourseId] = useState(null);
+  const [editingLessonId, setEditingLessonId] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedPdf, setSelectedPdf] = useState(null);
 
@@ -117,6 +119,16 @@ const AdminDashboardPage = () => {
     } catch (err) {}
   };
 
+  // Helper to resolve media URLs (handles local paths vs absolute YouTube URLs)
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    // Prepend the backend base URL to local paths
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const baseUrl = apiUrl.split("/api")[0];
+    return `${baseUrl}${url}`;
+  };
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -148,21 +160,40 @@ const AdminDashboardPage = () => {
     }
 
     try {
-      setLoading(true);
-      console.info("[ADMIN] Creating course:", courseData.title);
-      await courseService.createCourse(courseData);
-      console.info("[ADMIN] Course created successfully:", courseData.title);
-      setSuccess(response.data.message || "Course saved successfully!");
+      setLoading(true); // Set loading state for the form submission
+      let response;
+      if (editingCourseId) {
+        console.info(
+          "[ADMIN] Updating course:",
+          editingCourseId,
+          courseData.title,
+        );
+        response = await courseService.updateCourse(
+          editingCourseId,
+          courseData,
+        );
+        console.info("[ADMIN] Course updated successfully:", courseData.title);
+        setSuccess(response.data.message || "Course updated successfully!");
+      } else {
+        console.info("[ADMIN] Creating course:", courseData.title);
+        response = await courseService.createCourse(courseData);
+        console.info("[ADMIN] Course created successfully:", courseData.title);
+        setSuccess(response.data.message || "Course created successfully!");
+      }
+
       setCourseData({ title: "", description: "", thumbnail: null });
       setShowCourseForm(false);
-      fetchAdminCourses();
+      fetchAdminData();
+      setEditingCourseId(null); // Reset editing state
     } catch (err) {
+      console.log("error test", err);
       console.error(
         "[ADMIN] Failed to create course:",
         err.response?.data?.message,
       );
       setError(err.response?.data?.message || "Failed to create course");
     } finally {
+      // Ensure loading state is reset regardless of success or failure
       setLoading(false);
     }
   };
@@ -190,20 +221,37 @@ const AdminDashboardPage = () => {
         "for course:",
         lessonData.courseId,
       );
-      const response = await lessonService.createLesson(lessonData);
-      console.info("[ADMIN] Lesson created successfully:", lessonData.title);
-      setSuccess(response.data.message || "Lesson saved successfully!");
+      let response;
+      if (editingLessonId) {
+        console.info(
+          "[ADMIN] Updating lesson:",
+          editingLessonId,
+          lessonData.title,
+        );
+        response = await lessonService.updateLesson(
+          editingLessonId,
+          lessonData,
+        );
+        console.info("[ADMIN] Lesson updated successfully:", lessonData.title);
+        setSuccess(response.data.message || "Lesson updated successfully!");
+      } else {
+        console.info("[ADMIN] Creating lesson:", lessonData.title);
+        response = await lessonService.createLesson(lessonData);
+        console.info("[ADMIN] Lesson created successfully:", lessonData.title);
+        setSuccess(response.data.message || "Lesson created successfully!");
+      }
+
       setLessonData({
+        // Reset lesson form data
         courseId: "",
         title: "",
         position: 0,
-        videoType: "youtube",
-        videoUrl: "",
         video: null,
         pdf: null,
       });
       setShowLessonForm(false);
-      fetchAdminCourses();
+      fetchAdminData(); // Refresh data to show new lesson
+      setEditingLessonId(null); // Reset editing state
     } catch (err) {
       console.error(
         "[ADMIN] Failed to create lesson:",
@@ -212,6 +260,14 @@ const AdminDashboardPage = () => {
       setError(err.response?.data?.message || "Failed to create lesson");
     } finally {
       setLoading(false);
+      // Reset videoType and videoUrl to default for next creation
+      setLessonData((prev) => ({
+        ...prev,
+        videoType: "youtube",
+        videoUrl: "",
+      }));
+      // Ensure thumbnail is reset for course creation
+      setCourseData((prev) => ({ ...prev, thumbnail: null }));
     }
   };
 
@@ -428,6 +484,7 @@ const AdminDashboardPage = () => {
   const handleDownloadPdf = (pdfUrl, title) => {
     const link = document.createElement("a");
     link.href = pdfUrl;
+    link.href = getMediaUrl(pdfUrl);
     link.download = `${title}.pdf`;
     document.body.appendChild(link);
     link.click();
@@ -436,6 +493,81 @@ const AdminDashboardPage = () => {
 
   const closeVideoModal = () => {
     setSelectedVideo(null);
+  };
+
+  // --- Course Edit/Delete Handlers ---
+  const handleEditCourse = (course) => {
+    console.log("Editing course:", course.id);
+    setEditingCourseId(course.id);
+    setCourseData({
+      title: course.title,
+      description: course.description,
+      thumbnail: null, // Thumbnail file needs to be re-selected or handled separately
+    });
+    setShowCourseForm(true); // Show the form for editing
+    // Scroll to form if needed
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    console.log("Deleting course:", courseId);
+    if (window.confirm("Are you sure you want to delete this course?")) {
+      setLoading(true);
+      try {
+        const response = await courseService.deleteCourse(courseId);
+        if (response.data.success) {
+          setSuccess(response.data.message || "Course deleted successfully!");
+          fetchAdminData(); // Refresh the list
+        }
+      } catch (err) {
+        console.error("Failed to delete course:", err);
+        setError(err.response?.data?.message || "Failed to delete course.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // --- Lesson Edit/Delete Handlers ---
+  const handleEditLesson = (lesson) => {
+    console.log("Editing lesson:", lesson.id);
+    setEditingLessonId(lesson.id);
+    setLessonData({
+      courseId: lesson.courseId,
+      title: lesson.title,
+      position: lesson.position,
+      videoType:
+        lesson.videoUrl && lesson.videoUrl.includes("youtube")
+          ? "youtube"
+          : "file",
+      videoUrl:
+        lesson.videoUrl && lesson.videoUrl.includes("youtube")
+          ? lesson.videoUrl
+          : "",
+      video: null, // Video file needs to be re-selected or handled separately
+      pdf: null, // PDF file needs to be re-selected or handled separately
+    });
+    setShowLessonForm(true); // Show the form for editing
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteLesson = async (lessonId) => {
+    console.log("Deleting lesson:", lessonId);
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      setLoading(true);
+      try {
+        const response = await lessonService.deleteLesson(lessonId);
+        if (response.data.success) {
+          setSuccess(response.data.message || "Lesson deleted successfully!");
+          fetchAdminData(); // Refresh the list
+        }
+      } catch (err) {
+        console.error("Failed to delete lesson:", err);
+        setError(err.response?.data?.message || "Failed to delete lesson.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (
@@ -517,7 +649,10 @@ const AdminDashboardPage = () => {
                 Manage Courses
               </h2>
               <button
-                onClick={() => setShowCourseForm(!showCourseForm)}
+                onClick={() => {
+                  setShowCourseForm(!showCourseForm);
+                  setEditingCourseId(null); // Clear editing state when toggling form
+                }}
                 className="btn-primary"
               >
                 {showCourseForm ? "Cancel" : "Create Course"}
@@ -528,7 +663,7 @@ const AdminDashboardPage = () => {
               // Course Creation Form
               <div className="bg-white rounded-lg shadow p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
-                  Create New Course
+                  {editingCourseId ? "Edit Course" : "Create New Course"}
                 </h3>
                 <form onSubmit={handleCourseSubmit} className="space-y-4">
                   <div>
@@ -586,7 +721,13 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? "Creating..." : "Create Course"}
+                    {loading
+                      ? editingCourseId
+                        ? "Updating..."
+                        : "Creating..."
+                      : editingCourseId
+                        ? "Update Course"
+                        : "Create Course"}
                   </button>
                 </form>
               </div>
@@ -614,6 +755,7 @@ const AdminDashboardPage = () => {
                       {course.thumbnail && (
                         <img
                           src={course.thumbnail}
+                          src={getMediaUrl(course.thumbnail)}
                           alt={course.title}
                           className="w-full h-40 object-cover rounded-t-lg"
                         />
@@ -639,11 +781,18 @@ const AdminDashboardPage = () => {
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button className="flex-1 btn-secondary text-sm py-2 flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEditCourse(course)}
+                            className="flex-1 btn-secondary text-sm py-2 flex items-center justify-center gap-2"
+                          >
                             <Edit2 className="w-4 h-4" />
                             Edit
                           </button>
-                          <button className="flex-1 bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-4 rounded text-sm flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleDeleteCourse(course.id)}
+                            disabled={loading}
+                            className="flex-1 bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-4 rounded text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
                             <Trash2 className="w-4 h-4" />
                             Delete
                           </button>
@@ -1082,7 +1231,10 @@ const AdminDashboardPage = () => {
                 Manage Lessons
               </h2>
               <button
-                onClick={() => setShowLessonForm(!showLessonForm)}
+                onClick={() => {
+                  setShowLessonForm(!showLessonForm);
+                  setEditingLessonId(null); // Clear editing state when toggling form
+                }}
                 className="btn-primary"
               >
                 {showLessonForm ? "Cancel" : "Create Lesson"}
@@ -1103,10 +1255,10 @@ const AdminDashboardPage = () => {
                       type="number"
                       value={lessonData.courseId}
                       onChange={(e) =>
-                        setLessonData({
-                          ...lessonData,
+                        setLessonData((prev) => ({
+                          ...prev,
                           courseId: e.target.value,
-                        })
+                        }))
                       }
                       className="input"
                       placeholder="Enter course ID"
@@ -1121,7 +1273,10 @@ const AdminDashboardPage = () => {
                       type="text"
                       value={lessonData.title}
                       onChange={(e) =>
-                        setLessonData({ ...lessonData, title: e.target.value })
+                        setLessonData((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
                       }
                       className="input"
                       placeholder="Enter lesson title"
@@ -1136,10 +1291,10 @@ const AdminDashboardPage = () => {
                       type="number"
                       value={lessonData.position}
                       onChange={(e) =>
-                        setLessonData({
-                          ...lessonData,
+                        setLessonData((prev) => ({
+                          ...prev,
                           position: parseInt(e.target.value),
-                        })
+                        }))
                       }
                       className="input"
                       placeholder="Lesson order"
@@ -1154,7 +1309,10 @@ const AdminDashboardPage = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          setLessonData({ ...lessonData, videoType: "youtube" })
+                          setLessonData((prev) => ({
+                            ...prev,
+                            videoType: "youtube",
+                          }))
                         }
                         className={`flex-1 py-2 px-4 rounded-lg border-2 font-semibold transition-all ${
                           lessonData.videoType === "youtube"
@@ -1167,7 +1325,10 @@ const AdminDashboardPage = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          setLessonData({ ...lessonData, videoType: "file" })
+                          setLessonData((prev) => ({
+                            ...prev,
+                            videoType: "file",
+                          }))
                         }
                         className={`flex-1 py-2 px-4 rounded-lg border-2 font-semibold transition-all ${
                           lessonData.videoType === "file"
@@ -1184,10 +1345,10 @@ const AdminDashboardPage = () => {
                         type="text"
                         value={lessonData.videoUrl}
                         onChange={(e) =>
-                          setLessonData({
-                            ...lessonData,
+                          setLessonData((prev) => ({
+                            ...prev,
                             videoUrl: e.target.value,
-                          })
+                          }))
                         }
                         className="input"
                         placeholder="Paste YouTube video URL here..."
@@ -1197,10 +1358,10 @@ const AdminDashboardPage = () => {
                         type="file"
                         accept="video/*"
                         onChange={(e) =>
-                          setLessonData({
-                            ...lessonData,
+                          setLessonData((prev) => ({
+                            ...prev,
                             video: e.target.files[0],
-                          })
+                          }))
                         }
                         className="input"
                       />
@@ -1215,10 +1376,10 @@ const AdminDashboardPage = () => {
                       type="file"
                       accept="application/pdf"
                       onChange={(e) =>
-                        setLessonData({
-                          ...lessonData,
+                        setLessonData((prev) => ({
+                          ...prev,
                           pdf: e.target.files[0],
-                        })
+                        }))
                       }
                       className="input"
                     />
@@ -1229,7 +1390,13 @@ const AdminDashboardPage = () => {
                     disabled={loading}
                     className="btn-primary w-full disabled:opacity-50"
                   >
-                    {loading ? "Creating..." : "Create Lesson"}
+                    {loading
+                      ? editingLessonId
+                        ? "Updating..."
+                        : "Creating..."
+                      : editingLessonId
+                        ? "Update Lesson"
+                        : "Create Lesson"}
                   </button>
                 </form>
               </div>
@@ -1261,7 +1428,7 @@ const AdminDashboardPage = () => {
                               <div className="flex items-center gap-4">
                                 {course.thumbnail && (
                                   <img
-                                    src={course.thumbnail}
+                                    src={getMediaUrl(course.thumbnail)}
                                     alt={course.title}
                                     className="w-16 h-16 object-cover rounded"
                                   />
@@ -1330,10 +1497,19 @@ const AdminDashboardPage = () => {
                                       </div>
                                     </div>
                                     <div className="flex gap-2 ml-4">
-                                      <button className="btn-secondary p-2 hover:bg-gray-200">
+                                      <button
+                                        onClick={() => handleEditLesson(lesson)}
+                                        className="btn-secondary p-2 hover:bg-gray-200"
+                                      >
                                         <Edit2 className="w-4 h-4" />
                                       </button>
-                                      <button className="bg-red-100 text-red-600 hover:bg-red-200 p-2 rounded">
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteLesson(lesson.id)
+                                        }
+                                        disabled={loading}
+                                        className="bg-red-100 text-red-600 hover:bg-red-200 p-2 rounded disabled:opacity-50"
+                                      >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
                                     </div>
@@ -1392,7 +1568,7 @@ const AdminDashboardPage = () => {
                 <video
                   controls
                   className="w-full h-full"
-                  src={selectedVideo.url}
+                  src={getMediaUrl(selectedVideo.url)}
                 >
                   Your browser does not support the video tag.
                 </video>
