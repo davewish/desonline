@@ -756,7 +756,6 @@ const AdminDashboardPage = () => {
                     >
                       {course.thumbnail && (
                         <img
-                          src={course.thumbnail}
                           src={getMediaUrl(course.thumbnail)}
                           alt={course.title}
                           className="w-full h-40 object-cover rounded-t-lg"
