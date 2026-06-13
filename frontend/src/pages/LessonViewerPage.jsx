@@ -41,6 +41,14 @@ const LessonViewerPage = () => {
     fetchLessonData();
   }, [lessonId, courseId]);
 
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const baseUrl = apiUrl.split("/api")[0];
+    return `${baseUrl}${url}`;
+  };
+
   // Dedicated effect to load quiz history whenever authentication state changes
   useEffect(() => {
     const loadQuizHistory = async () => {
@@ -269,7 +277,7 @@ const LessonViewerPage = () => {
                   <video
                     controls
                     className="w-full h-full"
-                    src={lesson.videoUrl}
+                    src={getMediaUrl(lesson.videoUrl)}
                     preload="metadata"
                   >
                     Your browser does not support the video tag.
@@ -293,7 +301,7 @@ const LessonViewerPage = () => {
               {lesson.pdfUrl && (
                 <div className="mt-6 pt-6 border-t">
                   <a
-                    href={lesson.pdfUrl}
+                    href={getMediaUrl(lesson.pdfUrl)}
                     download
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
                   >

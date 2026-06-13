@@ -483,7 +483,6 @@ const AdminDashboardPage = () => {
 
   const handleDownloadPdf = (pdfUrl, title) => {
     const link = document.createElement("a");
-    link.href = pdfUrl;
     link.href = getMediaUrl(pdfUrl);
     link.download = `${title}.pdf`;
     document.body.appendChild(link);
