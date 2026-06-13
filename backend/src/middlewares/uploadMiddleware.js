@@ -1,95 +1,141 @@
-import multer from 'multer'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configure storage for videos
 const videoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/videos'))
+    cb(null, path.join(__dirname, "../../uploads/videos"));
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
   },
-})
+});
 
 // Configure storage for PDFs
 const pdfStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/pdfs'))
+    cb(null, path.join(__dirname, "../../uploads/pdfs"));
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
   },
-})
+});
 
 // Configure storage for thumbnails
 const thumbnailStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/thumbnails'))
+    cb(null, path.join(__dirname, "../../uploads/thumbnails"));
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
   },
-})
+});
 
 // File filter for videos
 const videoFilter = (req, file, cb) => {
-  const allowedTypes = /mp4|webm|avi/
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-  const mimetype = allowedTypes.test(file.mimetype)
+  const allowedTypes = /mp4|webm|avi/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
 
   if (mimetype && extname) {
-    return cb(null, true)
+    return cb(null, true);
   } else {
-    cb(new Error('Only video files are allowed (mp4, webm, avi)'))
+    cb(new Error("Only video files are allowed (mp4, webm, avi)"));
   }
-}
+};
 
 // File filter for PDFs
 const pdfFilter = (req, file, cb) => {
-  const allowedTypes = /pdf/
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-  const mimetype = allowedTypes.test(file.mimetype)
+  const allowedTypes = /pdf/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
 
   if (mimetype && extname) {
-    return cb(null, true)
+    return cb(null, true);
   } else {
-    cb(new Error('Only PDF files are allowed'))
+    cb(new Error("Only PDF files are allowed"));
   }
-}
+};
 
 // File filter for images
 const imageFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-  const mimetype = allowedTypes.test(file.mimetype)
+  const allowedTypes = /jpeg|jpg|png|gif/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
 
   if (mimetype && extname) {
-    return cb(null, true)
+    return cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif)'))
+    cb(new Error("Only image files are allowed (jpeg, jpg, png, gif)"));
   }
-}
+};
 
 export const uploadVideo = multer({
   storage: videoStorage,
   fileFilter: videoFilter,
   limits: { fileSize: process.env.MAX_FILE_SIZE || 52428800 }, // 50MB
-})
+});
 
 export const uploadPDF = multer({
   storage: pdfStorage,
   fileFilter: pdfFilter,
   limits: { fileSize: 10485760 }, // 10MB
-})
+});
 
 export const uploadThumbnail = multer({
   storage: thumbnailStorage,
   fileFilter: imageFilter,
   limits: { fileSize: 5242880 }, // 5MB
-})
+});
+
+/**
+ * Combined middleware for Lesson creation/updates.
+ * Handles both 'video' and 'pdf' fields in a single request.
+ */
+export const uploadLesson = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Route files to specific directories based on their field name
+      const folder = file.fieldname === "pdf" ? "pdfs" : "videos";
+      cb(null, path.join(__dirname, `../../uploads/${folder}`));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(
+        null,
+        file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+      );
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    // Reuse existing filters based on the incoming field
+    if (file.fieldname === "video") return videoFilter(req, file, cb);
+    if (file.fieldname === "pdf") return pdfFilter(req, file, cb);
+    cb(new Error("Unexpected field: " + file.fieldname));
+  },
+  limits: { fileSize: 52428800 }, // 50MB limit to accommodate video size
+}).fields([
+  { name: "video", maxCount: 1 },
+  { name: "pdf", maxCount: 1 },
+]);

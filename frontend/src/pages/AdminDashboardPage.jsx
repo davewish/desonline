@@ -1247,23 +1247,30 @@ const AdminDashboardPage = () => {
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   Create New Lesson
                 </h3>
-                <form onSubmit={handleLessonSubmit} className="space-y-4">
+                <form onSubmit={handleLessonSubmit} className="space-y-6">
                   <div>
                     <label className="block text-gray-700 font-semibold mb-2">
-                      Course ID
+                      Course
                     </label>
-                    <input
-                      type="number"
+                    <select
                       value={lessonData.courseId}
                       onChange={(e) =>
                         setLessonData((prev) => ({
                           ...prev,
-                          courseId: e.target.value,
+                          courseId: e.target.value
+                            ? parseInt(e.target.value)
+                            : "", // Convert to number or empty string
                         }))
                       }
                       className="input"
-                      placeholder="Enter course ID"
-                    />
+                    >
+                      <option value="">Select a course</option>
+                      {adminCourses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
