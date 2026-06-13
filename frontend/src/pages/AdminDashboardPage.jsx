@@ -121,11 +121,13 @@ const AdminDashboardPage = () => {
 
   // Helper to resolve media URLs (handles local paths vs absolute YouTube URLs)
   const getMediaUrl = (url) => {
+    console.log("url ", url);
     if (!url) return null;
     if (url.startsWith("http")) return url;
     // Prepend the backend base URL to local paths
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
     const baseUrl = apiUrl.split("/api")[0];
+    console.log("base url ", baseUrl);
     return `${baseUrl}${url}`;
   };
 
