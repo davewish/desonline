@@ -74,7 +74,7 @@ export const getLessonById = async (req, res) => {
  */
 export const createLesson = async (req, res) => {
   try {
-    const { courseId, title, position } = req.body;
+    const { courseId, title, position, videoUrl: bodyVideoUrl } = req.body;
     const userId = req.user.userId;
 
     // Validation
@@ -104,7 +104,7 @@ export const createLesson = async (req, res) => {
       });
     }
 
-    let videoUrl = null;
+    let videoUrl = bodyVideoUrl || null;
     let pdfUrl = null;
 
     if (req.files?.video) {
@@ -145,7 +145,7 @@ export const createLesson = async (req, res) => {
 export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, position } = req.body;
+    const { title, position, courseId, videoUrl: bodyVideoUrl } = req.body;
     const userId = req.user.userId;
 
     const lesson = await prisma.lesson.findUnique({
@@ -167,7 +167,8 @@ export const updateLesson = async (req, res) => {
       });
     }
 
-    let videoUrl = lesson.videoUrl;
+    // Prioritize new uploaded file, then body URL (YouTube), otherwise keep existing
+    let videoUrl = bodyVideoUrl || lesson.videoUrl;
     let pdfUrl = lesson.pdfUrl;
 
     if (req.files?.video) {
@@ -181,6 +182,7 @@ export const updateLesson = async (req, res) => {
     const updatedLesson = await prisma.lesson.update({
       where: { id: parseInt(id) },
       data: {
+        courseId: courseId ? parseInt(courseId) : lesson.courseId,
         title: title || lesson.title,
         videoUrl,
         pdfUrl,
