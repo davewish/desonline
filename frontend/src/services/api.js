@@ -60,6 +60,7 @@ export const authService = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
   getProfile: () => api.get("/auth/profile"),
+  activate: (token) => api.post("/auth/activate", { token }),
 };
 
 // Course services

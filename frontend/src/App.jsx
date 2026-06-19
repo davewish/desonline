@@ -14,6 +14,7 @@ import CourseDetailsPage from "./pages/CourseDetailsPage";
 import LessonViewerPage from "./pages/LessonViewerPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import UserDashboardPage from "./pages/UserDashboardPage";
+import ActivatePage from "./pages/ActivatePage";
 
 function App() {
   useEffect(() => {
@@ -29,6 +30,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/activate" element={<ActivatePage />} />
 
           {/* Protected routes */}
           <Route
