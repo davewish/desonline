@@ -4,6 +4,7 @@ import {
   loginUser,
   getProfile,
   activateAccount,
+  activateUser,
 } from "../controllers/authController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
