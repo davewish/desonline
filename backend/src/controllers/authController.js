@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import prisma from "../utils/db.js";
 import { generateToken } from "../utils/jwt.js";
 import { sendActivationEmail } from "../services/emailService.js";
+import { Prisma } from "@prisma/client";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
