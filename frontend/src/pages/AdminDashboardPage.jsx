@@ -12,6 +12,8 @@ import {
   Minus,
   BookOpen,
   FileText,
+  Users,
+  ShieldCheck,
 } from "lucide-react";
 import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 import {
@@ -19,6 +21,7 @@ import {
   lessonService,
   quizService,
   examService,
+  adminService,
 } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
@@ -33,6 +36,7 @@ const AdminDashboardPage = () => {
   const [adminCourses, setAdminCourses] = useState([]);
   const [adminLessons, setAdminLessons] = useState([]);
   const [adminQuizzes, setAdminQuizzes] = useState([]); // Not currently used for display, but good to have
+  const [adminUsers, setAdminUsers] = useState([]);
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
@@ -111,6 +115,22 @@ const AdminDashboardPage = () => {
     } catch (err) {
       console.error("Failed to fetch lessons:", err);
       setAdminLessons([]);
+    }
+
+    try {
+      const usersResponse = await adminService.getUsers();
+      if (
+        usersResponse.data.success &&
+        Array.isArray(usersResponse.data.data)
+      ) {
+        console.info("[ADMIN] Loaded", usersResponse.data.data.length, "users");
+        setAdminUsers(usersResponse.data.data);
+      } else {
+        setAdminUsers([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      setAdminUsers([]);
     }
 
     // Placeholder for fetching all quizzes/exams if needed for a list view
@@ -572,6 +592,41 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // --- User Approve/Role Handlers ---
+  const handleApproveUser = async (userId) => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      console.info("[ADMIN] Approving user:", userId);
+      const response = await adminService.approveUser(userId);
+      setSuccess(response.data.message || "User approved successfully!");
+      fetchAdminData();
+    } catch (err) {
+      console.error("Failed to approve user:", err);
+      setError(err.response?.data?.message || "Failed to approve user.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      console.info("[ADMIN] Updating role for user:", userId, "to", newRole);
+      const response = await adminService.updateUserRole(userId, newRole);
+      setSuccess(response.data.message || "User role updated successfully!");
+      fetchAdminData();
+    } catch (err) {
+      console.error("Failed to update user role:", err);
+      setError(err.response?.data?.message || "Failed to update user role.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -624,6 +679,16 @@ const AdminDashboardPage = () => {
             }`}
           >
             Manage Exams
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
+              activeTab === "users"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Manage Users
           </button>
         </div>
       </div>
@@ -1537,6 +1602,128 @@ const AdminDashboardPage = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <div>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">Manage Users</h2>
+              <span className="text-gray-500 text-sm">
+                {Array.isArray(adminUsers) ? adminUsers.length : 0} registered
+              </span>
+            </div>
+
+            {!Array.isArray(adminUsers) || adminUsers.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-600">No registered users yet.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Joined
+                      </th>
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {adminUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {u.name}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 text-sm">
+                          {u.email}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                              u.role === "ADMIN"
+                                ? "bg-purple-100 text-purple-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {u.role === "ADMIN" && (
+                              <ShieldCheck className="w-3 h-3" />
+                            )}
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                              u.isActive
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {u.isActive ? "Active" : "Pending"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">
+                          {u.createdAt
+                            ? new Date(u.createdAt).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            {!u.isActive && (
+                              <button
+                                onClick={() => handleApproveUser(u.id)}
+                                disabled={loading}
+                                className="text-xs bg-green-100 text-green-700 hover:bg-green-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                              >
+                                Approve
+                              </button>
+                            )}
+                            {u.role === "USER" ? (
+                              <button
+                                onClick={() => handleRoleChange(u.id, "ADMIN")}
+                                disabled={loading}
+                                className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                              >
+                                Make Admin
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRoleChange(u.id, "USER")}
+                                disabled={loading || u.id === user?.id}
+                                title={
+                                  u.id === user?.id
+                                    ? "You can't change your own role"
+                                    : undefined
+                                }
+                                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                              >
+                                Make User
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

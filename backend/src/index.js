@@ -15,6 +15,7 @@ import lessonRoutes from "./routes/lessonRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import examRoutes from "./routes/examRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // Import middleware
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes
+app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/lessons", lessonRoutes);

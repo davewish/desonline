@@ -153,5 +153,7 @@ export const examService = {
   getUserExamHistory: (examId) => api.get(`/exams/${examId}/history`),
   deleteExam: (id) => api.delete(`/exams/${id}`),
 };
-
+export const adminService = {
+  getUsers: () => api.get(`/admin/users`),
+};
 export default api;
