@@ -156,5 +156,11 @@ export const examService = {
 export const adminService = {
   getUsers: () => api.get(`/admin/users`),
   approveUser: (userId) => api.patch(`/admin/users/${userId}/approve`),
+  updateUserRole: (userId, newRole) =>
+    api.patch(`/admin/users/${userId}/role`, { role: newRole }),
+  getEnrollments: (params) => api.get("/admin/enrollments", { params }),
+  markEnrollmentPaid: (id) => api.patch(`/admin/enrollments/${id}/mark-paid`),
+  grantCourseAccess: (userId, courseId) =>
+    api.post("/admin/enrollments/grant", { userId, courseId }),
 };
 export default api;

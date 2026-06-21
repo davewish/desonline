@@ -30,7 +30,6 @@ export const getAllUsers = async (req, res) => {
           role: true,
           isActive: true,
           createdAt: true,
-          enrollments: true,
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -100,6 +99,42 @@ export const approveUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to approve user",
+    });
+  }
+};
+
+/**
+ * List all enrollments for the admin dashboard, with optional filtering by
+ * payment status — used to review and approve pending payments.
+ * GET /api/admin/enrollments?paymentStatus=PENDING
+ */
+export const getAllEnrollments = async (req, res) => {
+  try {
+    const { paymentStatus } = req.query;
+
+    const where = {};
+    if (paymentStatus) {
+      where.paymentStatus = paymentStatus;
+    }
+
+    const enrollments = await prisma.enrollment.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        course: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: enrollments,
+    });
+  } catch (error) {
+    console.error("Failed to fetch enrollments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch enrollments",
     });
   }
 };

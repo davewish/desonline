@@ -14,6 +14,7 @@ import {
   FileText,
   Users,
   ShieldCheck,
+  CreditCard,
 } from "lucide-react";
 import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 import {
@@ -37,6 +38,7 @@ const AdminDashboardPage = () => {
   const [adminLessons, setAdminLessons] = useState([]);
   const [adminQuizzes, setAdminQuizzes] = useState([]); // Not currently used for display, but good to have
   const [adminUsers, setAdminUsers] = useState([]);
+  const [adminEnrollments, setAdminEnrollments] = useState([]);
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
@@ -131,6 +133,26 @@ const AdminDashboardPage = () => {
     } catch (err) {
       console.error("Failed to fetch users:", err);
       setAdminUsers([]);
+    }
+
+    try {
+      const enrollmentsResponse = await adminService.getEnrollments();
+      if (
+        enrollmentsResponse.data.success &&
+        Array.isArray(enrollmentsResponse.data.data)
+      ) {
+        console.info(
+          "[ADMIN] Loaded",
+          enrollmentsResponse.data.data.length,
+          "enrollments",
+        );
+        setAdminEnrollments(enrollmentsResponse.data.data);
+      } else {
+        setAdminEnrollments([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch enrollments:", err);
+      setAdminEnrollments([]);
     }
 
     // Placeholder for fetching all quizzes/exams if needed for a list view
@@ -627,74 +649,110 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // --- Enrollment Payment Handler ---
+  const handleMarkEnrollmentPaid = async (enrollmentId) => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      console.info("[ADMIN] Marking enrollment as paid:", enrollmentId);
+      const response = await adminService.markEnrollmentPaid(enrollmentId);
+      setSuccess(response.data.message || "Enrollment marked as paid!");
+      fetchAdminData();
+    } catch (err) {
+      console.error("Failed to mark enrollment as paid:", err);
+      setError(
+        err.response?.data?.message || "Failed to mark enrollment as paid.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
-        <div className="container py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Welcome, {user?.name}</p>
+        <div className="container py-4 sm:py-6 px-4 sm:px-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Welcome, {user?.name}
+          </p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="bg-white border-b">
-        <div className="container flex gap-8">
-          <button
-            onClick={() => setActiveTab("courses")}
-            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === "courses"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Manage Courses
-          </button>
-          <button
-            onClick={() => setActiveTab("lessons")}
-            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === "lessons"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Manage Lessons
-          </button>
-          <button
-            onClick={() => setActiveTab("quizzes")}
-            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === "quizzes"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Manage Quizzes
-          </button>
-          <button
-            onClick={() => setActiveTab("exams")}
-            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === "exams"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Manage Exams
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`py-4 px-6 font-semibold border-b-2 transition-colors ${
-              activeTab === "users"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Manage Users
-          </button>
+        <div className="container overflow-x-auto">
+          <div className="flex gap-4 sm:gap-8 px-4 sm:px-6 min-w-max">
+            <button
+              onClick={() => setActiveTab("courses")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "courses"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Manage Courses
+            </button>
+            <button
+              onClick={() => setActiveTab("lessons")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "lessons"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Manage Lessons
+            </button>
+            <button
+              onClick={() => setActiveTab("quizzes")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "quizzes"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Manage Quizzes
+            </button>
+            <button
+              onClick={() => setActiveTab("exams")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "exams"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Manage Exams
+            </button>
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "users"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Manage Users
+            </button>
+            <button
+              onClick={() => setActiveTab("payments")}
+              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === "payments"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Payments
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="container py-12">
+      <div className="container py-6 sm:py-12 px-4 sm:px-6">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -711,8 +769,8 @@ const AdminDashboardPage = () => {
 
         {activeTab === "courses" && (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Manage Courses
               </h2>
               <button
@@ -874,8 +932,8 @@ const AdminDashboardPage = () => {
 
         {activeTab === "quizzes" && (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Manage Quizzes
               </h2>
               <button
@@ -1077,8 +1135,10 @@ const AdminDashboardPage = () => {
 
         {activeTab === "exams" && (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Manage Exams</h2>
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Manage Exams
+              </h2>
               <button
                 onClick={() => setShowExamForm(!showExamForm)}
                 className="btn-primary"
@@ -1292,8 +1352,8 @@ const AdminDashboardPage = () => {
 
         {activeTab === "lessons" && (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Manage Lessons
               </h2>
               <button
@@ -1607,8 +1667,10 @@ const AdminDashboardPage = () => {
 
         {activeTab === "users" && (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Manage Users</h2>
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Manage Users
+              </h2>
               <span className="text-gray-500 text-sm">
                 {Array.isArray(adminUsers) ? adminUsers.length : 0} registered
               </span>
@@ -1620,109 +1682,351 @@ const AdminDashboardPage = () => {
                 <p className="text-gray-600">No registered users yet.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Role
-                      </th>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Joined
-                      </th>
-                      <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {adminUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          {u.name}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600 text-sm">
-                          {u.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              u.role === "ADMIN"
-                                ? "bg-purple-100 text-purple-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}
-                          >
-                            {u.role === "ADMIN" && (
-                              <ShieldCheck className="w-3 h-3" />
-                            )}
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              u.isActive
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {u.isActive ? "Active" : "Pending"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500 text-sm">
+              <>
+                {/* Mobile card list */}
+                <div className="sm:hidden space-y-4">
+                  {adminUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      className="bg-white rounded-lg shadow p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {u.name}
+                          </p>
+                          <p className="text-gray-500 text-sm break-all">
+                            {u.email}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
+                            u.role === "ADMIN"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {u.role === "ADMIN" && (
+                            <ShieldCheck className="w-3 h-3" />
+                          )}
+                          {u.role}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            u.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {u.isActive ? "Active" : "Pending"}
+                        </span>
+                        <span className="text-gray-500">
                           {u.createdAt
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "N/A"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            {!u.isActive && (
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {!u.isActive && (
+                          <button
+                            onClick={() => handleApproveUser(u.id)}
+                            disabled={loading}
+                            className="text-xs bg-green-100 text-green-700 hover:bg-green-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {u.role === "USER" ? (
+                          <button
+                            onClick={() => handleRoleChange(u.id, "ADMIN")}
+                            disabled={loading}
+                            className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                          >
+                            Make Admin
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRoleChange(u.id, "USER")}
+                            disabled={loading || u.id === user?.id}
+                            className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                          >
+                            Make User
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block bg-white rounded-lg shadow overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Email
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Role
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Joined
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {adminUsers.map((u) => (
+                        <tr key={u.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900">
+                            {u.name}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 text-sm">
+                            {u.email}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                u.role === "ADMIN"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {u.role === "ADMIN" && (
+                                <ShieldCheck className="w-3 h-3" />
+                              )}
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                u.isActive
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {u.isActive ? "Active" : "Pending"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500 text-sm">
+                            {u.createdAt
+                              ? new Date(u.createdAt).toLocaleDateString()
+                              : "N/A"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              {!u.isActive && (
+                                <button
+                                  onClick={() => handleApproveUser(u.id)}
+                                  disabled={loading}
+                                  className="text-xs bg-green-100 text-green-700 hover:bg-green-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                                >
+                                  Approve
+                                </button>
+                              )}
+                              {u.role === "USER" ? (
+                                <button
+                                  onClick={() =>
+                                    handleRoleChange(u.id, "ADMIN")
+                                  }
+                                  disabled={loading}
+                                  className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                                >
+                                  Make Admin
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleRoleChange(u.id, "USER")}
+                                  disabled={loading || u.id === user?.id}
+                                  title={
+                                    u.id === user?.id
+                                      ? "You can't change your own role"
+                                      : undefined
+                                  }
+                                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                                >
+                                  Make User
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === "payments" && (
+          <div>
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Payments
+              </h2>
+              <span className="text-gray-500 text-sm">
+                {Array.isArray(adminEnrollments) ? adminEnrollments.length : 0}{" "}
+                enrollments
+              </span>
+            </div>
+
+            {!Array.isArray(adminEnrollments) ||
+            adminEnrollments.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-600">No enrollments yet.</p>
+              </div>
+            ) : (
+              <>
+                {/* Mobile card list */}
+                <div className="sm:hidden space-y-4">
+                  {adminEnrollments.map((e) => (
+                    <div
+                      key={e.id}
+                      className="bg-white rounded-lg shadow p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {e.user?.name}
+                          </p>
+                          <p className="text-gray-500 text-sm break-all">
+                            {e.user?.email}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
+                            e.paymentStatus === "PAID"
+                              ? "bg-green-100 text-green-700"
+                              : e.paymentStatus === "FAILED"
+                                ? "bg-red-100 text-red-700"
+                                : e.paymentStatus === "REFUNDED"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {e.paymentStatus}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        Course:{" "}
+                        <span className="font-medium">{e.course?.title}</span>
+                      </p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">
+                          Enrolled{" "}
+                          {e.createdAt
+                            ? new Date(e.createdAt).toLocaleDateString()
+                            : "N/A"}
+                        </span>
+                        {e.paymentStatus !== "PAID" && (
+                          <button
+                            onClick={() => handleMarkEnrollmentPaid(e.id)}
+                            disabled={loading}
+                            className="text-xs bg-green-100 text-green-700 hover:bg-green-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
+                          >
+                            Mark as Paid
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block bg-white rounded-lg shadow overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Student
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Course
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Enrolled
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Paid At
+                        </th>
+                        <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {adminEnrollments.map((e) => (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <p className="font-medium text-gray-900">
+                              {e.user?.name}
+                            </p>
+                            <p className="text-gray-500 text-sm">
+                              {e.user?.email}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {e.course?.title}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                e.paymentStatus === "PAID"
+                                  ? "bg-green-100 text-green-700"
+                                  : e.paymentStatus === "FAILED"
+                                    ? "bg-red-100 text-red-700"
+                                    : e.paymentStatus === "REFUNDED"
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {e.paymentStatus}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500 text-sm">
+                            {e.createdAt
+                              ? new Date(e.createdAt).toLocaleDateString()
+                              : "N/A"}
+                          </td>
+                          <td className="px-6 py-4 text-gray-500 text-sm">
+                            {e.paidAt
+                              ? new Date(e.paidAt).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            {e.paymentStatus !== "PAID" && (
                               <button
-                                onClick={() => handleApproveUser(u.id)}
+                                onClick={() => handleMarkEnrollmentPaid(e.id)}
                                 disabled={loading}
                                 className="text-xs bg-green-100 text-green-700 hover:bg-green-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
                               >
-                                Approve
+                                Mark as Paid
                               </button>
                             )}
-                            {u.role === "USER" ? (
-                              <button
-                                onClick={() => handleRoleChange(u.id, "ADMIN")}
-                                disabled={loading}
-                                className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
-                              >
-                                Make Admin
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleRoleChange(u.id, "USER")}
-                                disabled={loading || u.id === user?.id}
-                                title={
-                                  u.id === user?.id
-                                    ? "You can't change your own role"
-                                    : undefined
-                                }
-                                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-3 py-1.5 rounded-full disabled:opacity-50"
-                              >
-                                Make User
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         )}
