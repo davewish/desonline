@@ -155,5 +155,6 @@ export const examService = {
 };
 export const adminService = {
   getUsers: () => api.get(`/admin/users`),
+  approveUser: (userId) => api.patch(`/admin/users/${userId}/approve`),
 };
 export default api;

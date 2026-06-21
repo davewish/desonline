@@ -30,6 +30,7 @@ export const getAllUsers = async (req, res) => {
           role: true,
           isActive: true,
           createdAt: true,
+          enrollments: true,
         },
         orderBy: { createdAt: "desc" },
         skip,
