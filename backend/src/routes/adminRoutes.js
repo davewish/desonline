@@ -2,7 +2,7 @@ import express from "express";
 import {
   authMiddleware,
   adminMiddleware,
-} from "../middleware/authMiddleware.js"; // adjust path to your actual file name
+} from "../middlewares/authMiddleware.js"; // adjust path to your actual file name
 import {
   getAllUsers,
   approveUser,
