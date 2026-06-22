@@ -683,70 +683,47 @@ const AdminDashboardPage = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — dropdown on mobile, tab bar on desktop */}
       <div className="bg-white border-b">
-        <div className="container overflow-x-auto">
-          <div className="flex gap-4 sm:gap-8 px-4 sm:px-6 min-w-max">
-            <button
-              onClick={() => setActiveTab("courses")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "courses"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+        <div className="container px-4 sm:px-6">
+          {/* Mobile: native select dropdown */}
+          <div className="sm:hidden py-3">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-700 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
-              Manage Courses
-            </button>
-            <button
-              onClick={() => setActiveTab("lessons")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "lessons"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Manage Lessons
-            </button>
-            <button
-              onClick={() => setActiveTab("quizzes")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "quizzes"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Manage Quizzes
-            </button>
-            <button
-              onClick={() => setActiveTab("exams")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "exams"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Manage Exams
-            </button>
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "users"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Manage Users
-            </button>
-            <button
-              onClick={() => setActiveTab("payments")}
-              className={`py-4 px-2 sm:px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "payments"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Payments
-            </button>
+              <option value="courses">📚 Manage Courses</option>
+              <option value="lessons">🎬 Manage Lessons</option>
+              <option value="quizzes">📝 Manage Quizzes</option>
+              <option value="exams">📋 Manage Exams</option>
+              <option value="users">👥 Manage Users</option>
+              <option value="payments">💳 Payments</option>
+            </select>
+          </div>
+
+          {/* Desktop: horizontal tab bar */}
+          <div className="hidden sm:flex gap-2">
+            {[
+              { key: "courses", label: "Manage Courses" },
+              { key: "lessons", label: "Manage Lessons" },
+              { key: "quizzes", label: "Manage Quizzes" },
+              { key: "exams", label: "Manage Exams" },
+              { key: "users", label: "Manage Users" },
+              { key: "payments", label: "Payments" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`py-4 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm ${
+                  activeTab === tab.key
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -786,7 +763,7 @@ const AdminDashboardPage = () => {
 
             {showCourseForm && (
               // Course Creation Form
-              <div className="bg-white rounded-lg shadow p-8 mb-8">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   {editingCourseId ? "Edit Course" : "Create New Course"}
                 </h3>
@@ -946,7 +923,7 @@ const AdminDashboardPage = () => {
 
             {showQuizForm && (
               // Quiz Creation Form
-              <div className="bg-white rounded-lg shadow p-8 mb-8">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   Create New Quiz
                 </h3>
@@ -1122,7 +1099,7 @@ const AdminDashboardPage = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+            <div className="bg-white rounded-lg shadow p-6 sm:p-12 text-center text-gray-400">
               <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-20" />
               <p>Quizzes are associated with individual lessons.</p>
               <p className="text-sm">
@@ -1149,7 +1126,7 @@ const AdminDashboardPage = () => {
 
             {showExamForm && (
               // Exam Creation Form
-              <div className="bg-white rounded-lg shadow p-8 mb-8">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   Create New Exam
                 </h3>
@@ -1339,7 +1316,7 @@ const AdminDashboardPage = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+            <div className="bg-white rounded-lg shadow p-6 sm:p-12 text-center text-gray-400">
               <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
               <p>Exams are associated with entire courses.</p>
               <p className="text-sm">
@@ -1368,7 +1345,7 @@ const AdminDashboardPage = () => {
             </div>
 
             {showLessonForm && (
-              <div className="bg-white rounded-lg shadow p-8 mb-8">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-8 mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">
                   Create New Lesson
                 </h3>
@@ -1588,17 +1565,17 @@ const AdminDashboardPage = () => {
                                   key={lesson.id}
                                   className="p-4 hover:bg-gray-50 transition-colors"
                                 >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
+                                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3">
-                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-semibold text-sm">
+                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-semibold text-sm flex-shrink-0">
                                           {lesson.position}
                                         </span>
-                                        <h4 className="font-semibold text-gray-900">
+                                        <h4 className="font-semibold text-gray-900 break-words">
                                           {lesson.title}
                                         </h4>
                                       </div>
-                                      <div className="flex gap-3 mt-3 ml-11">
+                                      <div className="flex gap-3 mt-3 ml-11 flex-wrap">
                                         {lesson.videoUrl && (
                                           <button
                                             onClick={() =>
@@ -1629,7 +1606,7 @@ const AdminDashboardPage = () => {
                                         )}
                                       </div>
                                     </div>
-                                    <div className="flex gap-2 ml-4">
+                                    <div className="flex gap-2 sm:ml-4">
                                       <button
                                         onClick={() => handleEditLesson(lesson)}
                                         className="btn-secondary p-2 hover:bg-gray-200"
