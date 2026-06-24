@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { authService } from "../services/api";
@@ -119,12 +119,12 @@ const LoginPage = () => {
 
         <p className="text-center text-gray-600 mt-6">
           Don't have an account?{" "}
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="text-blue-600 font-semibold hover:underline"
           >
             Register
-          </a>
+          </Link>
         </p>
       </div>
     </div>

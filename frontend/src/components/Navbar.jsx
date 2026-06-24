@@ -124,7 +124,7 @@ const Navbar = () => {
                   >
                     English
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleLanguageChange("ti")}
                     className={`block w-full text-left px-4 py-2 ${
                       i18n.language === "ti"
@@ -133,7 +133,7 @@ const Navbar = () => {
                     }`}
                   >
                     ትግርኛ (Tigrigna)
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>

@@ -2,17 +2,13 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-/**
- * Protected Route component
- * Only allows authenticated users to access the route
- */
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, token, loading } = useAuth();
 
-  console.log("🔒 ProtectedRoute check:", {
+  console.log("ProtectedRoute", {
+    loading,
     isAuthenticated,
     hasToken: !!token,
-    loading,
   });
 
   if (loading) {
@@ -24,11 +20,9 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated || !token) {
-    console.log("❌ Not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  console.log("✅ Authenticated, rendering protected content");
   return children;
 };
 

@@ -26,6 +26,7 @@ router.patch(
   adminMiddleware,
   updateUserRole,
 );
+router.get("/enrollments", authMiddleware, adminMiddleware, getAllEnrollments);
 
 router.patch(
   "/enrollments/:id/mark-paid",

@@ -1,9 +1,6 @@
 import React, { createContext, useState, useCallback, useEffect } from "react";
 import { storage } from "../utils/storage";
 
-/**
- * Auth Context for managing user authentication state
- */
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -11,17 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Initialize token from storage on mount
-  useEffect(() => {
-    const storedToken = storage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-      // Verify token is still valid
-      getUserProfile(storedToken);
-    }
-    setLoading(false);
-  }, []);
 
   const getUserProfile = useCallback(async (authToken) => {
     try {
@@ -33,25 +19,52 @@ export const AuthProvider = ({ children }) => {
           },
         },
       );
+
       const data = await response.json();
+
+      console.log("PROFILE RESPONSE:", data);
+
       if (data.success) {
         setUser(data.data);
-      } else {
-        setToken(null);
-        storage.removeItem("token");
+        return true;
       }
+
+      setUser(null);
+      setToken(null);
+      storage.removeItem("token");
+
+      return false;
     } catch (err) {
       console.error("Profile fetch error:", err);
+
+      setUser(null);
+      setToken(null);
+      storage.removeItem("token");
+
+      return false;
     }
   }, []);
 
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const storedToken = storage.getItem("token");
+
+        console.log("Stored token:", storedToken);
+
+        if (storedToken) {
+          setToken(storedToken);
+          await getUserProfile(storedToken);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, [getUserProfile]);
+
   const login = useCallback((newToken, userData) => {
-    console.info(
-      "[AUTH] User logged in:",
-      userData.email,
-      "Role:",
-      userData.role,
-    );
     setToken(newToken);
     setUser(userData);
     storage.setItem("token", newToken);
@@ -59,11 +72,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    console.info("[AUTH] User logged out");
     setToken(null);
     setUser(null);
-    storage.removeItem("token");
     setError(null);
+    storage.removeItem("token");
   }, []);
 
   const register = useCallback((userData) => {
@@ -79,8 +91,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    isAuthenticated: !!token,
-    isAdmin: user?.role === "ADMIN",
+    isAuthenticated: Boolean(token),
+    isAdmin: user?.role?.toUpperCase() === "ADMIN",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
