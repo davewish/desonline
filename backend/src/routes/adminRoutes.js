@@ -9,6 +9,7 @@ import {
   updateUserRole,
   markEnrollmentAsPaid,
   grantCourseAccess,
+  getAllEnrollments,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
