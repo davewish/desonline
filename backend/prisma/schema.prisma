@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model
+///////////////////////////////////////
+// USER
+///////////////////////////////////////
 model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
@@ -26,9 +25,16 @@ model User {
   userQuizzes   UserQuiz[]
   userExams     UserExam[]
 
+  // ✅ NEW: video learning system
+  lessonProgress LessonProgress[]
+  progressEvents ProgressEvent[]
+
   @@map("users")
 }
-// Course model
+
+///////////////////////////////////////
+// COURSE
+///////////////////////////////////////
 model Course {
   id            Int       @id @default(autoincrement())
   title         String
@@ -38,16 +44,21 @@ model Course {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   creator       User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   lessons       Lesson[]
   enrollments   Enrollment[]
   exams         Exam[]
 
+  // ✅ NEW
+  lessonProgress LessonProgress[]
+  progressEvents ProgressEvent[]
+
   @@map("courses")
 }
 
-// Lesson model
+///////////////////////////////////////
+// LESSON
+///////////////////////////////////////
 model Lesson {
   id            Int       @id @default(autoincrement())
   title         String
@@ -58,14 +69,19 @@ model Lesson {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   quizzes       Quiz[]
+
+  // ✅ NEW
+  lessonProgress LessonProgress[]
+  progressEvents ProgressEvent[]
 
   @@map("lessons")
 }
 
-// Enrollment model
+///////////////////////////////////////
+// ENROLLMENT
+///////////////////////////////////////
 model Enrollment {
   id            Int       @id @default(autoincrement())
   userId        Int
@@ -74,16 +90,16 @@ model Enrollment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  // Unique constraint
   @@unique([userId, courseId])
   @@map("enrollments")
 }
 
-// Quiz model - Lesson-level quizzes
+///////////////////////////////////////
+// QUIZ
+///////////////////////////////////////
 model Quiz {
   id            Int       @id @default(autoincrement())
   title         String
@@ -92,7 +108,6 @@ model Quiz {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   lesson        Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   questions     Question[]
   userQuizzes   UserQuiz[]
@@ -101,7 +116,9 @@ model Quiz {
   @@map("quizzes")
 }
 
-// Exam model - Course-level exams
+///////////////////////////////////////
+// EXAM
+///////////////////////////////////////
 model Exam {
   id            Int       @id @default(autoincrement())
   title         String
@@ -111,7 +128,6 @@ model Exam {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   questions     Question[]
   userExams     UserExam[]
@@ -120,19 +136,20 @@ model Exam {
   @@map("exams")
 }
 
-// Question model - Questions for quizzes and exams
+///////////////////////////////////////
+// QUESTION
+///////////////////////////////////////
 model Question {
   id            Int       @id @default(autoincrement())
   text          String
-  options       String[]  // Array of answer options (JSONB in PostgreSQL)
-  correctAnswer Int       // Index of correct option (0-based)
+  options       String[]
+  correctAnswer Int
   quizId        Int?
   examId        Int?
-  position      Int       @default(0) // Question order
+  position      Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   quiz          Quiz?     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   exam          Exam?     @relation(fields: [examId], references: [id], onDelete: Cascade)
 
@@ -141,13 +158,15 @@ model Question {
   @@map("questions")
 }
 
-// UserQuiz model - Tracks user quiz attempts
+///////////////////////////////////////
+// USER QUIZ
+///////////////////////////////////////
 model UserQuiz {
   id            Int       @id @default(autoincrement())
   userId        Int
   quizId        Int
-  score         Int       // Percentage (0-100)
-  answers       Json      // { "0": 2, "1": 1, ... } (question index: selected answer index)
+  score         Int
+  answers       Json
   completed     Boolean   @default(true)
   attempts      Int       @default(1)
   startedAt     DateTime  @default(now())
@@ -155,7 +174,6 @@ model UserQuiz {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
@@ -165,22 +183,23 @@ model UserQuiz {
   @@map("user_quizzes")
 }
 
-// UserExam model - Tracks user exam attempts
+///////////////////////////////////////
+// USER EXAM
+///////////////////////////////////////
 model UserExam {
   id              Int       @id @default(autoincrement())
   userId          Int
   examId          Int
-  score           Int       // Percentage (0-100)
-  answers         Json      // { "0": 2, "1": 1, ... } (question index: selected answer index)
+  score           Int
+  answers         Json
   passed          Boolean   @default(false)
   attempts        Int       @default(1)
-  certificatePath String?   // Path to generated certificate PDF
+  certificatePath String?
   startedAt       DateTime  @default(now())
   completedAt     DateTime  @default(now())
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam            Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
 
@@ -188,4 +207,59 @@ model UserExam {
   @@index([userId])
   @@index([examId])
   @@map("user_exams")
+}
+
+///////////////////////////////////////
+// 🆕 VIDEO PROGRESS (CORE LMS FEATURE)
+///////////////////////////////////////
+model LessonProgress {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  courseId      Int
+  lessonId      Int
+
+  currentTime   Float    @default(0)
+  duration      Float    @default(0)
+
+  completed     Boolean  @default(false)
+  lastWatchedAt DateTime @default(now())
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+///////////////////////////////////////
+// 🆕 ANALYTICS EVENT SYSTEM
+///////////////////////////////////////
+model ProgressEvent {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  lessonId    Int
+
+  eventType   String   // VIDEO_PROGRESS | PAUSE | COMPLETE
+  value       Float?
+  meta        Json?
+
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([eventType])
+  @@map("progress_events")
 }

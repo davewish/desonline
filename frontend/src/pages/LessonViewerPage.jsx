@@ -15,6 +15,7 @@ import {
   lessonService,
   quizService,
   enrollmentService,
+  progressService,
 } from "../services/api";
 import { getMediaUrl, getYouTubeEmbedUrl } from "../utils/mediaUtils";
 import { useAuth } from "../hooks/useAuth";
@@ -281,10 +282,45 @@ const LessonViewerPage = () => {
                     controls
                     className="w-full h-full"
                     src={getMediaUrl(lesson.videoUrl)}
-                    preload="metadata"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+                    // =====================
+                    // RESTORE PROGRESS
+                    // =====================
+                    onLoadedMetadata={() => {
+                      if (videoProgress?.currentTime && videoRef.current) {
+                        videoRef.current.currentTime =
+                          videoProgress.currentTime;
+                      }
+                    }}
+                    // =====================
+                    // SAVE PROGRESS
+                    // =====================
+                    onTimeUpdate={(e) => {
+                      const currentTime = e.target.currentTime;
+
+                      if (saveTimeout.current) return;
+
+                      saveTimeout.current = setTimeout(async () => {
+                        try {
+                          await progressService.saveProgress({
+                            lessonId,
+                            currentTime,
+                            duration: videoRef.current?.duration || 0,
+                          });
+                        } catch (err) {
+                        } finally {
+                          saveTimeout.current = null;
+                        }
+                      }, 5000);
+                    }}
+                    // =====================
+                    // COMPLETE
+                    // =====================
+                    onEnded={async () => {
+                      try {
+                        await progressService.markComplete(lessonId);
+                      } catch (err) {}
+                    }}
+                  />
                 )}
               </div>
             )}

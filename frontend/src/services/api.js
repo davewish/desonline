@@ -131,6 +131,13 @@ export const enrollmentService = {
   enrollCourse: (courseId) => api.post("/enrollments", { courseId }),
   unenrollCourse: (enrollmentId) => api.delete(`/enrollments/${enrollmentId}`),
 };
+export const progressService = {
+  saveProgress: (data) => api.post("/progress/lesson", data),
+
+  getProgress: (lessonId) => api.get(`/progress/lesson/${lessonId}`),
+
+  markComplete: (lessonId) => api.post(`/progress/lesson/${lessonId}/complete`),
+};
 
 // Quiz services
 export const quizService = {
