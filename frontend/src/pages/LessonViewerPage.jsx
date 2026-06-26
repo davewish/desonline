@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Download,
@@ -38,11 +38,181 @@ const LessonViewerPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [quizResults, setQuizResults] = useState({}); // Stores results by quizId
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const playerRef = useRef(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     fetchLessonData();
   }, [lessonId, courseId]);
 
+  useEffect(() => {
+    if (!lesson?.videoUrl?.includes("youtube")) return;
+
+    console.log("[YT] init effect");
+
+    let intervalRef = null;
+    let playerRef = null;
+
+    // ================================
+    // WAIT FOR IFRAME (FIXED RACE CONDITION)
+    // ================================
+    const waitForIframe = (retries = 10) => {
+      return new Promise((resolve, reject) => {
+        const check = () => {
+          const iframe = document.getElementById("yt-player");
+
+          if (iframe) {
+            console.log("[YT] iframe found");
+            resolve(iframe);
+            return;
+          }
+
+          console.log("[YT] waiting for iframe...");
+
+          if (retries <= 0) {
+            reject("iframe not found");
+            return;
+          }
+
+          setTimeout(() => {
+            waitForIframe(retries - 1)
+              .then(resolve)
+              .catch(reject);
+          }, 300);
+        };
+
+        check();
+      });
+    };
+
+    // ================================
+    // INIT PLAYER
+    // ================================
+    const initPlayer = async () => {
+      try {
+        const iframe = await waitForIframe();
+
+        console.log("[YT] initPlayer starting");
+
+        if (!window.YT || !window.YT.Player) {
+          console.log("[YT] YT API not ready yet");
+          return;
+        }
+
+        playerRef = new window.YT.Player("yt-player", {
+          events: {
+            onReady: () => {
+              console.log("[YT] player ready");
+            },
+
+            onStateChange: (event) => {
+              const player = event.target;
+
+              console.log("[YT] state:", event.data);
+
+              // =========================
+              // PLAYING
+              // =========================
+              if (event.data === window.YT.PlayerState.PLAYING) {
+                console.log("[YT] playing");
+
+                if (intervalRef) clearInterval(intervalRef);
+
+                intervalRef = setInterval(async () => {
+                  try {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+
+                    console.log("[YT] progress:", {
+                      currentTime,
+                      duration,
+                    });
+
+                    await progressService.saveProgress({
+                      lessonId,
+                      courseId,
+                      currentTime,
+                      duration,
+                    });
+                  } catch (err) {
+                    console.log("[YT] save error", err);
+                  }
+                }, 5000);
+              }
+
+              // =========================
+              // PAUSED
+              // =========================
+              if (event.data === window.YT.PlayerState.PAUSED) {
+                console.log("[YT] paused");
+                if (intervalRef) clearInterval(intervalRef);
+              }
+
+              // =========================
+              // ENDED
+              // =========================
+              if (event.data === window.YT.PlayerState.ENDED) {
+                console.log("[YT] ended");
+
+                if (intervalRef) clearInterval(intervalRef);
+
+                progressService
+                  .markComplete(lessonId)
+                  .then(() => console.log("[YT] completed"))
+                  .catch(console.log);
+              }
+            },
+          },
+        });
+      } catch (err) {
+        console.log("[YT] init failed:", err);
+      }
+    };
+
+    // ================================
+    // LOAD YOUTUBE SCRIPT SAFELY
+    // ================================
+    const loadScript = () => {
+      return new Promise((resolve) => {
+        if (window.YT && window.YT.Player) {
+          resolve();
+          return;
+        }
+
+        console.log("[YT] loading script...");
+
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+
+        window.onYouTubeIframeAPIReady = () => {
+          console.log("[YT] API ready");
+          resolve();
+        };
+      });
+    };
+
+    // ================================
+    // START FLOW
+    // ================================
+    loadScript().then(() => {
+      console.log("[YT] script loaded");
+      initPlayer();
+    });
+
+    // ================================
+    // CLEANUP
+    // ================================
+    return () => {
+      console.log("[YT] cleanup");
+
+      if (intervalRef) clearInterval(intervalRef);
+
+      if (playerRef && playerRef.destroy) {
+        playerRef.destroy();
+      }
+    };
+  }, [lessonId, lesson?.videoUrl]);
   // Dedicated effect to load quiz history whenever authentication state changes
   useEffect(() => {
     const loadQuizHistory = async () => {
@@ -268,15 +438,20 @@ const LessonViewerPage = () => {
                 {lesson.videoUrl.includes("youtube") ||
                 lesson.videoUrl.includes("youtu.be") ? (
                   <iframe
+                    id="yt-player"
                     width="100%"
                     height="100%"
-                    src={getYouTubeEmbedUrl(lesson.videoUrl)}
+                    src={
+                      getYouTubeEmbedUrl(lesson.videoUrl) +
+                      "?enablejsapi=1&origin=" +
+                      window.location.origin
+                    }
                     title={lesson.title}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full"
-                  ></iframe>
+                  />
                 ) : (
                   <video
                     controls
