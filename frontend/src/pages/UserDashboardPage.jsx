@@ -50,6 +50,13 @@ const UserDashboardPage = () => {
   const isEnrolled = (courseId) => {
     return enrollments.some((enrollment) => enrollment.courseId === courseId);
   };
+  const isPaid = (courseId) => {
+    return enrollments.some(
+      (enrollment) =>
+        (enrollment.courseId === courseId) &
+        (enrollment.paymentStatus === "PAID"),
+    );
+  };
 
   const handleLogout = () => {
     console.info("[USER-DASHBOARD] User logging out:", user?.email);
@@ -72,9 +79,17 @@ const UserDashboardPage = () => {
   };
 
   const handleContinueCourse = (courseId) => {
+    const enrollment = enrollments.find(
+      (e) => e.courseId === courseId && e.paymentStatus === "PAID",
+    );
+
+    if (!enrollment) {
+      alert("This course has not been paid yet.");
+      return;
+    }
+
     navigate(`/course/${courseId}`);
   };
-
   const totalProgress =
     enrollments.length > 0
       ? Math.round(
@@ -293,6 +308,7 @@ const UserDashboardPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {allCourses.map((course) => {
                       const courseIsEnrolled = isEnrolled(course.id);
+                      const courseIsPaid = isPaid(course.id);
                       return (
                         <div
                           key={course.id}
